@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function Homepage() {
   const [laoding, setLoading] = useState(false);
@@ -48,8 +49,32 @@ export default function Homepage() {
   const [signInPassword, setSignInPassword] = useState("");
   const signInHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-    } catch (error) {}
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_API}/adminSignIn`,
+        JSON.stringify({
+          adminDetails: {
+            adminEmail: signInEmail,
+            password: signInPassword,
+          },
+        }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+      setLoading(false);
+      const { message, signInAt, token } = response.data;
+      // Set the token in a cookie
+      Cookies.set("adminToken", token, {
+        expires: 1,
+        secure: true,
+        sameSite: "Strict",
+      }); // Expires in 1 day, secure and sameSite settings for added security
+      alert(message);
+      navigate("/productpage");
+      return { token };
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -205,7 +230,7 @@ export default function Homepage() {
               type="submit"
               className="w-full bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 transition duration-200"
             >
-              Sign In
+              {laoding ? "signing in..." : "sign in"}
             </button>
           </form>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 // test passed
 export const OtpVerify = () => {
@@ -15,8 +16,10 @@ export const OtpVerify = () => {
         JSON.stringify({ otp: OTP }),
         { headers: { "Content-Type": "application/json" } }
       );
-      alert(response.data.message);
       setLoading(false);
+      const { token } = response.data;
+      Cookies.set("token", token, { expires: 1 }); //expires at 1 day
+      alert(response.data.message);
     } catch (error) {
       console.log(error);
     }
