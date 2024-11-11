@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 
 export default function Homepage() {
   const [laoding, setLoading] = useState(false);
+  const [siginInLoading, setSignInLoading] = useState(false);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -49,7 +50,7 @@ export default function Homepage() {
   const [signInPassword, setSignInPassword] = useState("");
   const signInHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSignInLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/adminSignIn`,
@@ -61,7 +62,7 @@ export default function Homepage() {
         }),
         { headers: { "Content-Type": "application/json" } }
       );
-      setLoading(false);
+      setSignInLoading(false);
       const { message, signInAt, token } = response.data;
       // Set the token in a cookie
       Cookies.set("adminToken", token, {
@@ -230,7 +231,7 @@ export default function Homepage() {
               type="submit"
               className="w-full bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 transition duration-200"
             >
-              {laoding ? "signing in..." : "sign in"}
+              {siginInLoading ? "signing in..." : "sign in"}
             </button>
           </form>
         </div>
