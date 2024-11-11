@@ -63,16 +63,24 @@ export default function Homepage() {
         { headers: { "Content-Type": "application/json" } }
       );
       setSignInLoading(false);
-      const { message, signInAt, token } = response.data;
+      const { message, signInAt, token, adminName } = response.data;
       // Set the token in a cookie
+      Cookies.set("adminUsername", adminName, {
+        expires: 1,
+        secure: true,
+        sameSite: "Strict",
+      }); // Expires in 1 day, secure and sameSite settings for added security
+      console.log(response.data);
       Cookies.set("adminToken", token, {
         expires: 1,
         secure: true,
         sameSite: "Strict",
       }); // Expires in 1 day, secure and sameSite settings for added security
+      console.log(response.data);
+
       alert(message);
       navigate("/productpage");
-      return { token };
+      // return { token };
     } catch (error) {
       console.log(error);
     }
