@@ -34,6 +34,7 @@ export default function ProductPage() {
 
   const acceptOrder = async (e, orderId) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await axios.patch(
         `${import.meta.env.VITE_BACKEND_API}/acceptOrder/${orderId}/${admin}`,
@@ -104,7 +105,7 @@ export default function ProductPage() {
                           onClick={(e) => acceptOrder(e, order._id)}
                           style={{ border: "2px solid blue" }}
                         >
-                          accept
+                          {loading ? 'accepting...':'accept'}
                         </button>
                         <button style={{ border: "2px solid red" }}>
                           reject

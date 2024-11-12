@@ -78,7 +78,7 @@ export default function Homepage() {
       }); // Expires in 1 day, secure and sameSite settings for added security
       console.log(response.data);
 
-      alert(message);
+      console.log(message);
       navigate("/productpage");
       // return { token };
     } catch (error) {
