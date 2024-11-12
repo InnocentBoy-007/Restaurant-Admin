@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 // test passed
 export const OtpVerify = () => {
+  const navigate = useNavigate();
   const [laoding, setLoading] = useState(false);
   const [OTP, setOTP] = useState("");
 
@@ -17,9 +19,9 @@ export const OtpVerify = () => {
         { headers: { "Content-Type": "application/json" } }
       );
       setLoading(false);
-      const { token } = response.data;
-      Cookies.set("token", token, { expires: 1 }); //expires at 1 day
-      alert(response.data.message);
+      Cookies.set("adminToken", response.data.token, { expires: 1 }); //expires at 1 day
+      console.log(response.data.message);
+      navigate("/productpage");
     } catch (error) {
       console.log(error);
     }
