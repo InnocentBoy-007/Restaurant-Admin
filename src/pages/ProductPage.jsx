@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 export default function ProductPage() {
   const admin = Cookies.get("adminUsername");
   console.log("Admin name:", admin);
+  const [loading, setLoading] = useState(false);
 
   const [orderDetails, setOrderDetails] = useState([]);
 
