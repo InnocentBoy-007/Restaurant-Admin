@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 export default function ProductPage() {
-  const admin = Cookies.get("adminUsername");
-  console.log("Admin name:", admin);
-  const [loading, setLoading] = useState(false);
-
   const [orderDetails, setOrderDetails] = useState([]);
+  const token = Cookies.get("adminToken");
 
   const fetchAdminDetails = async () => {
-    const token = Cookies.get("adminToken");
     if (!token) {
       console.log("No token found!");
       return;
@@ -34,12 +31,25 @@ export default function ProductPage() {
 
   const acceptOrder = async (e, orderId) => {
     e.preventDefault();
-    setLoading(true);
+    if (!token) {
+      console.log("No token found!");
+      return;
+    }
+    const admin = jwtDecode(token);
+    const adminName = admin.adminName;
     try {
       const response = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_API}/acceptOrder/${orderId}/${admin}`,
+        `${
+          import.meta.env.VITE_BACKEND_API
+        }/acceptOrder/${orderId}/${adminName}`,
         {},
-        { headers: { "Content-Type": "application/json" } }
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
       );
       fetchAdminDetails();
       console.log(response.data);
@@ -50,12 +60,7 @@ export default function ProductPage() {
 
   useEffect(() => {
     fetchAdminDetails();
-    // tried adding polling
-    // const interval = setInterval(() => {
-    //   fetchAdminDetails();
-    // }, 2000);
-    // return () => clearInterval(interval);
-  }, []);
+  }, [token]); // Re-fetches data when the token changes
 
   return (
     <>
