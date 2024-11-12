@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Cookies from "js-cookie";
 
 export default function Homepage() {
   const [laoding, setLoading] = useState(false);
@@ -62,27 +61,13 @@ export default function Homepage() {
         }),
         { headers: { "Content-Type": "application/json" } }
       );
-      setSignInLoading(false);
-      const { message, signInAt, token, adminName } = response.data;
-      // Set the token in a cookie
-      Cookies.set("adminUsername", adminName, {
-        expires: 1,
-        secure: true,
-        sameSite: "Strict",
-      }); // Expires in 1 day, secure and sameSite settings for added security
-      console.log(response.data);
-      Cookies.set("adminToken", token, {
-        expires: 1,
-        secure: true,
-        sameSite: "Strict",
-      }); // Expires in 1 day, secure and sameSite settings for added security
-      console.log(response.data);
-
-      console.log(message);
+      console.log(response.data.message);
       navigate("/productpage");
       // return { token };
     } catch (error) {
       console.log(error);
+    }finally {
+        setSignInLoading(false);
     }
   };
 

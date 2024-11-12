@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 export default function ProductPage() {
   const [orderDetails, setOrderDetails] = useState([]);
   const token = Cookies.get("adminToken");
+  const [loading, setLoading] = useState(false);
 
   const fetchAdminDetails = async () => {
     if (!token) {
@@ -31,6 +32,7 @@ export default function ProductPage() {
 
   const acceptOrder = async (e, orderId) => {
     e.preventDefault();
+    setLoading(true);
     if (!token) {
       console.log("No token found!");
       return;
@@ -51,6 +53,7 @@ export default function ProductPage() {
           withCredentials: true,
         }
       );
+      setLoading(false);
       fetchAdminDetails();
       console.log(response.data);
     } catch (error) {
