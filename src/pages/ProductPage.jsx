@@ -6,9 +6,14 @@ import { jwtDecode } from "jwt-decode";
 export default function ProductPage() {
   const [orderDetails, setOrderDetails] = useState([]);
   const token = Cookies.get("adminToken");
-  const [loading, setLoading] = useState(false);
+  const decodedToken = jwtDecode(token);
+  const adminName = decodedToken.adminName;
+  const [acceptLoading, setAcceptLoading] = useState(false);
+  const [rejectLoading, setRejectLoading] = useState(false);
 
-  const fetchAdminDetails = async () => {
+  const fetchOrderDetails = async () => {
+    console.log("token-->", token);
+
     if (!token) {
       console.log("No token found!");
       return;
@@ -18,7 +23,7 @@ export default function ProductPage() {
         `${import.meta.env.VITE_BACKEND_API}/fetchOrders`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Authorization": `Bearer ${token}`,
           },
           withCredentials: true,
         }
@@ -32,13 +37,11 @@ export default function ProductPage() {
 
   const acceptOrder = async (e, orderId) => {
     e.preventDefault();
-    setLoading(true);
+    setAcceptLoading(true);
     if (!token) {
       console.log("No token found!");
       return;
     }
-    const admin = jwtDecode(token);
-    const adminName = admin.adminName;
     try {
       const response = await axios.patch(
         `${
@@ -48,27 +51,60 @@ export default function ProductPage() {
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            "Authorization": `Bearer ${token}`,
           },
           withCredentials: true,
         }
       );
-      setLoading(false);
-      fetchAdminDetails();
+      setAcceptLoading(false);
+      fetchOrderDetails();
       console.log(response.data);
     } catch (error) {
       console.log(error);
+      setAcceptLoading(false);
+    }
+  };
+
+  const rejectOrder = async (e, orderId) => {
+    e.preventDefault();
+    setRejectLoading(true);
+    console.log("Token--->", token); // it works
+
+    if (!token) {
+      console.log("No token found!");
+      return;
+    }
+    try {
+      const response = await axios.delete(
+        `${
+          import.meta.env.VITE_BACKEND_API
+        }/rejectOrder/${orderId}/${adminName}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+      setRejectLoading(false);
+      fetchOrderDetails();
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+      setRejectLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAdminDetails();
+    fetchOrderDetails();
   }, [token]); // Re-fetches data when the token changes
 
   return (
     <>
       <div className="text-center">
         <h1 className="mt-2">Admin Panel</h1>
+        {adminName ? <h1>Welcome {adminName} to the admin panel</h1> : <></>}
         <div className="w-full mt-4">
           <table className="w-full">
             <thead>
@@ -113,10 +149,13 @@ export default function ProductPage() {
                           onClick={(e) => acceptOrder(e, order._id)}
                           style={{ border: "2px solid blue" }}
                         >
-                          {loading ? 'accepting...':'accept'}
+                          {acceptLoading ? "accepting..." : "accept"}
                         </button>
-                        <button style={{ border: "2px solid red" }}>
-                          reject
+                        <button
+                          style={{ border: "2px solid red" }}
+                          onClick={(e) => rejectOrder(e, order._id)}
+                        >
+                          {rejectLoading ? "rejecting..." : "reject"}
                         </button>
                       </>
                     ) : (
