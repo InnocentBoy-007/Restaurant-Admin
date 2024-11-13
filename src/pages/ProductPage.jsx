@@ -23,7 +23,7 @@ export default function ProductPage() {
         `${import.meta.env.VITE_BACKEND_API}/fetchOrders`,
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
@@ -51,7 +51,7 @@ export default function ProductPage() {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
@@ -82,7 +82,7 @@ export default function ProductPage() {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
