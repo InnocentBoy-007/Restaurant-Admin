@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 export default function ProductPage() {
   const [orderDetails, setOrderDetails] = useState([]);
   const token = Cookies.get("adminToken");
+  //   const token2 = Cookies.get("signInAdminToken");
   const decodedToken = jwtDecode(token);
   const adminName = decodedToken.adminName;
   const [acceptLoading, setAcceptLoading] = useState(false);
@@ -20,7 +21,7 @@ export default function ProductPage() {
     }
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/fetchOrders`,
+        `${import.meta.env.VITE_BACKEND_API}/fetchOrders/${adminName}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -28,7 +29,7 @@ export default function ProductPage() {
           withCredentials: true,
         }
       );
-      setOrderDetails(response.data);
+      setOrderDetails(response.data.orders);
       console.log(response.data);
     } catch (error) {
       console.log(error);

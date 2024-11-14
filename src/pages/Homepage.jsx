@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import axios from "axios";
 
 export default function Homepage() {
@@ -62,12 +63,13 @@ export default function Homepage() {
         { headers: { "Content-Type": "application/json" } }
       );
       console.log(response.data.message);
+      Cookies.set("adminToken", response.data.token, { expires: 1 });
       navigate("/productpage");
       // return { token };
     } catch (error) {
       console.log(error);
-    }finally {
-        setSignInLoading(false);
+    } finally {
+      setSignInLoading(false);
     }
   };
 
