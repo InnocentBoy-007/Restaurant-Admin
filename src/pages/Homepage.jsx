@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -16,12 +16,26 @@ export default function Homepage() {
 
   const navigate = useNavigate();
 
+  // if there is token available in cookies, the admin will be redirected to productpage
+  // no need to signin again as long as there is a token inside cookies
+  const tokenAvailable = () => {
+    const token = Cookies.get("adminToken");
+    if (token) {
+      navigate("/productpage");
+      return;
+    }
+  };
+
+  useEffect(() => {
+    tokenAvailable();
+  }, []);
+
   const signUpHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/adminSignUp`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/signup`,
         JSON.stringify({
           adminDetails: {
             adminName: username,
@@ -53,7 +67,7 @@ export default function Homepage() {
     setSignInLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/adminSignIn`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/signin`,
         JSON.stringify({
           adminDetails: {
             adminEmail: signInEmail,
@@ -62,11 +76,15 @@ export default function Homepage() {
         }),
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log(response.data.message);
+      // console.log(response.data.message);
       Cookies.set("adminToken", response.data.token, { expires: 1 });
       navigate("/productpage");
       // return { token };
     } catch (error) {
+      if (error.response) {
+        console.log(error.response.data.message);
+        alert(error.response.data.message);
+      }
       console.log(error);
     } finally {
       setSignInLoading(false);

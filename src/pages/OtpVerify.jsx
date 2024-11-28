@@ -14,8 +14,8 @@ export const OtpVerify = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/adminVerification`,
-        JSON.stringify({ otp: OTP }),
+        `${import.meta.env.VITE_BACKEND_API}/admin/verify`,
+        JSON.stringify({ otp: Number(OTP) }),
         { headers: { "Content-Type": "application/json" } }
       );
       setLoading(false);
@@ -29,7 +29,7 @@ export const OtpVerify = () => {
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="bg-white p-6 rounded shadow-md w-96">
         <input
-          type="number"
+          type="text"
           placeholder="Enter your OTP here..."
           value={OTP}
           onChange={(e) => setOTP(e.target.value)}
