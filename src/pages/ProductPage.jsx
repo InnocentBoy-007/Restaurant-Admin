@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import refreshAccessToken from "./RefreshToken";
 
 export default function ProductPage() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function ProductPage() {
   //   const token2 = Cookies.get("signInAdminToken");
   const decodedToken = jwtDecode(token);
   const adminName = decodedToken.adminName;
+
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -35,7 +37,14 @@ export default function ProductPage() {
       setOrderDetails(response.data.orders);
       // console.log(response.data);
     } catch (error) {
-      console.log(error);
+      if (error.response) {
+        const newToken = await refreshAccessToken(navigate);
+        if (newToken) {
+          return fetchOrderDetails();
+        } else {
+          console.log(error);
+        }
+      }
     }
   };
 
@@ -115,13 +124,21 @@ export default function ProductPage() {
         }
       );
       Cookies.remove("adminToken");
+      Cookies.remove("adminRefreshToken");
       setLogoutLoading(false);
       alert(response.data.message);
       navigate("/");
     } catch (error) {
-      setLogoutLoading(false);
-      navigate("/productpage");
-      console.log(error);
+      if (error.response) {
+        const newToken = await refreshAccessToken(navigate);
+        if (newToken) {
+          return logOut(e);
+        } else {
+          console.log(error);
+          setLogoutLoading(false);
+          navigate("/");
+        }
+      }
     }
   };
 

@@ -78,6 +78,7 @@ export default function Homepage() {
       );
       // console.log(response.data.message);
       Cookies.set("adminToken", response.data.token, { expires: 1 });
+      Cookies.set("adminRefreshToken", response.data.refreshToken);
       navigate("/productpage");
       // return { token };
     } catch (error) {
