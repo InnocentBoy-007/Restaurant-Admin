@@ -23,6 +23,7 @@ export const OtpVerify = () => {
       Cookies.set("adminRefreshToken", response.data.refreshToken); //expires at 1 day
       navigate("/productpage");
     } catch (error) {
+      setLoading(false);
       console.log(error);
     }
   };

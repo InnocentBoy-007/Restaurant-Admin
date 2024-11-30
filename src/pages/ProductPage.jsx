@@ -8,14 +8,34 @@ import refreshAccessToken from "./RefreshToken";
 export default function ProductPage() {
   const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState([]);
-  const token = Cookies.get("adminToken");
-  //   const token2 = Cookies.get("signInAdminToken");
+  const token = Cookies.get("adminToken"); // this is the primary token
   const decodedToken = jwtDecode(token);
-  const adminName = decodedToken.adminName;
+  const adminId = decodedToken.adminId;
+  //   const token2 = Cookies.get("signInAdminToken");
+  //   const decodedToken = jwtDecode(token);
+  //   const adminName = decodedToken.adminName;
+
+  const [adminName, setAdminName] = useState("");
 
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+
+  const fetchAdminDetails = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_API}/admin/adminDetails`,
+        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
+      );
+      setAdminName(response.data.adminDetails);
+      console.log("Admin details--->", response.data.adminDetails);
+    } catch (error) {
+      console.log(error);
+      if (error.response) {
+        alert(error.response.data.message);
+      }
+    }
+  };
 
   const fetchOrderDetails = async () => {
     // console.log("token-->", token);
@@ -26,7 +46,7 @@ export default function ProductPage() {
     }
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/admin/orders/${adminName}`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/orders/${adminId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -130,7 +150,8 @@ export default function ProductPage() {
       navigate("/");
     } catch (error) {
       if (error.response) {
-        const newToken = await refreshAccessToken(navigate);
+        setLogoutLoading(false);
+        const newToken = await refreshAccessToken(navigate); // this function sends the refresh token to fetch a new primary token
         if (newToken) {
           return logOut(e);
         } else {

@@ -38,12 +38,12 @@ export default function Homepage() {
         `${import.meta.env.VITE_BACKEND_API}/admin/signup`,
         JSON.stringify({
           adminDetails: {
-            adminName: username,
-            adminEmail: email,
-            password: password,
-            adminPhoneNo: phoneNo,
-            adminGender: gender,
-            adminAge: parseInt(age),
+            name: username,
+            email,
+            password,
+            phoneNo,
+            gender,
+            age: parseInt(age),
           },
         }),
         {
@@ -56,6 +56,7 @@ export default function Homepage() {
       setLoading(false);
       navigate("/otpverify");
     } catch (error) {
+      setLoading(false);
       console.log(error);
     }
   };
@@ -70,7 +71,7 @@ export default function Homepage() {
         `${import.meta.env.VITE_BACKEND_API}/admin/signin`,
         JSON.stringify({
           adminDetails: {
-            adminEmail: signInEmail,
+            email: signInEmail,
             password: signInPassword,
           },
         }),

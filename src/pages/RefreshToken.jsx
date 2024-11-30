@@ -4,15 +4,20 @@ import { jwtDecode } from "jwt-decode";
 
 // Define the refreshAccessToken function
 export const refreshAccessToken = async (navigate) => {
-  const token = Cookies.get("adminToken");
-  const adminName = jwtDecode(token).adminName;
+  //   const token = Cookies.get("adminToken");
+  //   const accountId = jwtDecode(token).adminId;
+  console.log(
+    "Token to send to backend, backup token--->",
+    Cookies.get("adminRefreshToken")
+  );
+
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_API}/admin/refresh-token/${adminName}`,
+      `${import.meta.env.VITE_BACKEND_API}/admin/refresh-token`,
       {},
       {
         headers: {
-          Authorization: `Bearer ${Cookies.get("adminRefreshToken")}`,
+          Authorization: `Bearer ${Cookies.get("adminRefreshToken")}`, // this 'adminRefreshToken' contains the adminId
           "Content-Type": "application/json",
         },
       }
