@@ -78,7 +78,7 @@ export default function Homepage() {
         { headers: { "Content-Type": "application/json" } }
       );
       // console.log(response.data.message);
-      Cookies.set("adminToken", response.data.token, { expires: 1 });
+      Cookies.set("adminToken", response.data.token);
       Cookies.set("adminRefreshToken", response.data.refreshToken);
       navigate("/productpage");
       // return { token };

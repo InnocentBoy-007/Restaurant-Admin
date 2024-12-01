@@ -1,11 +1,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-
+import { useNavigate } from "react-router-dom";
 // Define the refreshAccessToken function
-export const refreshAccessToken = async (navigate) => {
+export const refreshAccessToken = async () => {
   //   const token = Cookies.get("adminToken");
   //   const accountId = jwtDecode(token).adminId;
+  const navigate = useNavigate();
   console.log(
     "Token to send to backend, backup token--->",
     Cookies.get("adminRefreshToken")

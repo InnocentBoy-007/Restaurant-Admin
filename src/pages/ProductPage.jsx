@@ -68,7 +68,7 @@ export default function ProductPage() {
     }
   };
 
-  const acceptOrder = async (e, orderId) => {
+  const acceptOrder = async (e, orderId, productId) => {
     e.preventDefault();
     setAcceptLoading(true);
     if (!token) {
@@ -76,10 +76,10 @@ export default function ProductPage() {
       return;
     }
     try {
-      const response = await axios.patch(
+      const response = await axios.post(
         `${
           import.meta.env.VITE_BACKEND_API
-        }/admin/orders/accept/${orderId}/${adminName}`,
+        }/admin/orders/accept/${orderId}/${productId}`,
         {},
         {
           headers: {
@@ -89,11 +89,13 @@ export default function ProductPage() {
           withCredentials: true,
         }
       );
-      setAcceptLoading(false);
       fetchOrderDetails();
-      console.log(response.data);
+      //   console.log(response.data.message);
+      alert(response.data.message);
     } catch (error) {
       console.log(error);
+      console.log(error.response.data.message);
+    } finally {
       setAcceptLoading(false);
     }
   };
@@ -149,17 +151,18 @@ export default function ProductPage() {
       alert(response.data.message);
       navigate("/");
     } catch (error) {
+      navigate("/");
+      setLogoutLoading(false);
       if (error.response) {
-        setLogoutLoading(false);
-        const newToken = await refreshAccessToken(navigate); // this function sends the refresh token to fetch a new primary token
+        const newToken = await refreshAccessToken(); // this function sends the refresh token to fetch a new primary token
         if (newToken) {
           return logOut(e);
         } else {
           console.log(error);
-          setLogoutLoading(false);
-          navigate("/");
         }
       }
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
@@ -206,12 +209,12 @@ export default function ProductPage() {
                     {/* Use a unique identifier for the key */}
                     <td>{index + 1}</td>
                     <td>{order._id}</td>
-                    <td>{order.orderEmail}</td>
-                    <td>{order.orderName}</td>
-                    <td>{order.orderPhoneNo}</td>
-                    <td>{order.orderProductName}</td>
-                    <td>{order.orderQuantity}</td>
-                    <td>{order.orderAddress}</td>
+                    <td>{order.email}</td>
+                    <td>{order.clientName}</td>
+                    <td>{order.phoneNo}</td>
+                    <td>{order.productName}</td>
+                    <td>{order.productQuantity}</td>
+                    <td>{order.address}</td>
                     <td>{order.productPrice}</td>
                     <td>{order.totalPrice}</td>
                     <td>{order.orderTime}</td>
@@ -220,7 +223,9 @@ export default function ProductPage() {
                         <>
                           {order.acceptedByAdmin}
                           <button
-                            onClick={(e) => acceptOrder(e, order._id)}
+                            onClick={(e) =>
+                              acceptOrder(e, order._id, order.productId)
+                            }
                             style={{ border: "2px solid blue" }}
                           >
                             {acceptLoading ? "accepting..." : "accept"}
@@ -237,7 +242,7 @@ export default function ProductPage() {
                       )}
                     </td>
                     <td>{order.orderDispatchedTime}</td>
-                    <td>{order.receivedByClient}</td>
+                    <td>{order.receivedByClient ? "yes" : "no"}</td>
                   </tr>
                 ))}
               </tbody>
