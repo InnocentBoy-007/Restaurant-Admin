@@ -15,9 +15,10 @@ export const OtpVerify = () => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/admin/verify`,
-        JSON.stringify({ otp: OTP }),
+        { otp: OTP },
         { headers: { "Content-Type": "application/json" } }
       );
+      alert(`${response.data.message}\n${response.data.verification}`);
       setLoading(false);
       Cookies.set("adminToken", response.data.token, { expires: 1 }); //expires at 1 day
       Cookies.set("adminRefreshToken", response.data.refreshToken); //expires at 1 day

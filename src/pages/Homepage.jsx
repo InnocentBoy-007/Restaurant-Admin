@@ -36,7 +36,7 @@ export default function Homepage() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/admin/signup`,
-        JSON.stringify({
+        {
           adminDetails: {
             name: username,
             email,
@@ -45,7 +45,7 @@ export default function Homepage() {
             gender,
             age: parseInt(age),
           },
-        }),
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -69,14 +69,15 @@ export default function Homepage() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_API}/admin/signin`,
-        JSON.stringify({
+        {
           adminDetails: {
             email: signInEmail,
             password: signInPassword,
           },
-        }),
+        },
         { headers: { "Content-Type": "application/json" } }
       );
+      alert(response.data.message);
       // console.log(response.data.message);
       Cookies.set("adminToken", response.data.token);
       Cookies.set("adminRefreshToken", response.data.refreshToken);

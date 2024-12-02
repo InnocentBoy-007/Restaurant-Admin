@@ -57,7 +57,11 @@ export default function ProductPage() {
       setOrderDetails(response.data.orders);
       // console.log(response.data);
     } catch (error) {
+      console.log("Error-->", error);
+
       if (error.response) {
+        console.log(error.response.data.message);
+
         const newToken = await refreshAccessToken(navigate);
         if (newToken) {
           return fetchOrderDetails();
@@ -111,9 +115,7 @@ export default function ProductPage() {
     }
     try {
       const response = await axios.delete(
-        `${
-          import.meta.env.VITE_BACKEND_API
-        }/admin/orders/reject/${orderId}/${adminName}`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/orders/reject/${orderId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -123,6 +125,7 @@ export default function ProductPage() {
         }
       );
       setRejectLoading(false);
+      alert(response.data.message);
       fetchOrderDetails();
       console.log(response.data);
     } catch (error) {
