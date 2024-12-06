@@ -2,18 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import refreshAccessToken from "./RefreshToken";
 
 export default function ProductPage() {
+  const token = Cookies.get("adminToken");
   const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState([]);
-  const token = Cookies.get("adminToken"); // this is the primary token
-  const decodedToken = jwtDecode(token);
-  const adminId = decodedToken.adminId;
-  //   const token2 = Cookies.get("signInAdminToken");
-  //   const decodedToken = jwtDecode(token);
-  //   const adminName = decodedToken.adminName;
+  // this is the primary token
 
   const [adminName, setAdminName] = useState("");
 
@@ -21,14 +16,23 @@ export default function ProductPage() {
   const [rejectLoading, setRejectLoading] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
 
+  const tokenAvailability = () => {
+    if (!token) {
+      navigate("/");
+    }
+  };
+
+  useEffect(() => {
+    tokenAvailability();
+  }, []);
+
   const fetchAdminDetails = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/admin/adminDetails`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/details`,
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
-      setAdminName(response.data.adminDetails);
-      console.log("Admin details--->", response.data.adminDetails);
+      setAdminName(response.data.adminDetails.name);
     } catch (error) {
       console.log(error);
       if (error.response) {
@@ -46,7 +50,7 @@ export default function ProductPage() {
     }
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/admin/orders/${adminId}`,
+        `${import.meta.env.VITE_BACKEND_API}/admin/orders`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -124,12 +128,12 @@ export default function ProductPage() {
           withCredentials: true,
         }
       );
-      setRejectLoading(false);
       alert(response.data.message);
       fetchOrderDetails();
       console.log(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
       setRejectLoading(false);
     }
   };
@@ -170,6 +174,7 @@ export default function ProductPage() {
   };
 
   useEffect(() => {
+    fetchAdminDetails();
     fetchOrderDetails();
   }, [token]); // Re-fetches data when the token changes
 
@@ -178,7 +183,13 @@ export default function ProductPage() {
       <div className="text-center">
         <h1 className="mt-2">Admin Panel</h1>
         {adminName ? <h1>Welcome {adminName} to the admin panel</h1> : <></>}
-        <div>
+        <div className="flex justify-between w-full p-2">
+          <button
+            className="border border-blue-600 p-1"
+            onClick={() => navigate("/admin/profile")}
+          >
+            Profile
+          </button>
           <button className="border border-red-600 p-1" onClick={logOut}>
             {logoutLoading ? "logging out..." : "log out"}
           </button>
@@ -187,7 +198,7 @@ export default function ProductPage() {
           {orderDetails.length === 0 ? (
             <h1>There are no order details</h1>
           ) : (
-            <table className="w-full">
+            <table className="w-full border border-red-300">
               <thead>
                 <tr>
                   <th>Sl no.</th>

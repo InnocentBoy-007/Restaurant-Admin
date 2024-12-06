@@ -9,6 +9,7 @@ export default function Homepage() {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
   const [gender, setGender] = useState("");
@@ -40,6 +41,7 @@ export default function Homepage() {
           adminDetails: {
             name: username,
             email,
+            address,
             password,
             phoneNo,
             gender,
@@ -135,6 +137,22 @@ export default function Homepage() {
             <div className="mb-4">
               <label
                 className="block text-sm font-medium text-gray-700"
+                htmlFor="address"
+              >
+                Address
+              </label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium text-gray-700"
                 htmlFor="password"
               >
                 Password
@@ -165,20 +183,34 @@ export default function Homepage() {
               />
             </div>
             <div className="mb-4">
-              <label
-                className="block text-sm font-medium text-gray-700"
-                htmlFor="gender"
-              >
+              <label className="block text-sm font-medium text-gray-700">
                 Gender
               </label>
-              <input
-                type="text"
-                id="gender"
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                required
-              />
+              <div className="mt-1">
+                <label className="inline-flex items-center mr-4">
+                  <input
+                    type="radio"
+                    value="male"
+                    checked={gender === "male"}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                    required
+                  />
+                  <span className="ml-2">Male</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    value="female"
+                    checked={gender === "female"}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                    required
+                  />
+                  <span className="ml-2">Female</span>
+                </label>
+                {/* Add more options as needed */}
+              </div>
             </div>
             <div className="mb-4">
               <label
