@@ -22,7 +22,7 @@ export default function Homepage() {
   const tokenAvailable = () => {
     const token = Cookies.get("adminToken");
     if (token) {
-      navigate("/productpage");
+      navigate("/admin/orders");
       return;
     }
   };
@@ -56,7 +56,7 @@ export default function Homepage() {
       );
       alert(response.data.message);
       setLoading(false);
-      navigate("/otpverify");
+      navigate("/admin/verify");
     } catch (error) {
       setLoading(false);
       console.log(error);
@@ -83,7 +83,7 @@ export default function Homepage() {
       // console.log(response.data.message);
       Cookies.set("adminToken", response.data.token);
       Cookies.set("adminRefreshToken", response.data.refreshToken);
-      navigate("/productpage");
+      navigate("/admin/orders");
       // return { token };
     } catch (error) {
       if (error.response) {

@@ -12,6 +12,7 @@ export default function ProductPage() {
 
   const [adminName, setAdminName] = useState("");
 
+  const [loading, setLoading] = useState(false);
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -48,6 +49,7 @@ export default function ProductPage() {
       //   console.log("No token found!");
       return;
     }
+    setLoading(true);
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/admin/orders`,
@@ -73,6 +75,8 @@ export default function ProductPage() {
           console.log(error);
         }
       }
+    } finally {
+      setLoading(false);
     }
   };
 

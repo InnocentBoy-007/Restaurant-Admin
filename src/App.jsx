@@ -10,8 +10,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Homepage />} index />
-        <Route path="/otpverify" element={<OtpVerify />} index />
-        <Route path="/productpage" element={<ProductPage />} index />
+        <Route path="/admin/verify" element={<OtpVerify />} index />
+        <Route path="/admin/orders" element={<ProductPage />} index />
         <Route path="/admin/profile" element={<PersonalDetails />} index />
       </Routes>
     </BrowserRouter>
