@@ -36,7 +36,7 @@ export default function Homepage() {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/admin/signup`,
+        `${import.meta.env.VITE_BACKEND_API}/signup`,
         {
           adminDetails: {
             name: username,
@@ -70,7 +70,7 @@ export default function Homepage() {
     setSignInLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/admin/signin`,
+        `${import.meta.env.VITE_BACKEND_API}/signin`,
         {
           adminDetails: {
             email: signInEmail,

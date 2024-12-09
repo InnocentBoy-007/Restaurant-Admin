@@ -14,7 +14,7 @@ export const OtpVerify = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/admin/verify`,
+        `${import.meta.env.VITE_BACKEND_API}/verify`,
         { otp: OTP },
         { headers: { "Content-Type": "application/json" } }
       );

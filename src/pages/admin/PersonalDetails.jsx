@@ -29,7 +29,7 @@ export default function PersonalDetails() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/admin/details`,
+        `${import.meta.env.VITE_BACKEND_API}/details`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -62,7 +62,7 @@ export default function PersonalDetails() {
     setDeleteLoading(true);
     try {
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API}/admin/details/delete`,
+        `${import.meta.env.VITE_BACKEND_API}/details/delete`,
         {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
@@ -94,7 +94,7 @@ export default function PersonalDetails() {
     setUpdateLoading(true);
     try {
       const response = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_API}/admin/details/update`,
+        `${import.meta.env.VITE_BACKEND_API}/details/update`,
         { adminDetails: { name, email, phoneNo, gender, address } },
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
@@ -113,6 +113,12 @@ export default function PersonalDetails() {
 
   return (
     <>
+      <div
+        className="w-full text-center p-4 bg-blue-300 cursor-pointer"
+        onClick={() => navigate("/admin/orders")}
+      >
+        Back
+      </div>
       {!loading ? (
         <div className="w-full p-2">
           <div className="flex justify-between">

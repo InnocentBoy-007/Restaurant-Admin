@@ -13,7 +13,7 @@ export const refreshAccessToken = async () => {
 
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_API}/admin/refresh-token`,
+      `${import.meta.env.VITE_BACKEND_API}/refresh-token`,
       {},
       {
         headers: {
