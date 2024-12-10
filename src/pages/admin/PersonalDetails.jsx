@@ -13,17 +13,23 @@ export default function PersonalDetails() {
 
   const [adminDetails, setAdminDetails] = useState({});
   const [adminAccountEdit, setAdminAccountEdit] = useState(false);
+  const [changePasswordFlag, setChangePasswordFlag] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [deleteAccountFlag, setDeleteAccountFlag] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [updatePasswordLoading, setUpdatePasswordLoading] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
   const [gender, setGender] = useState("");
   const [address, setAddress] = useState("");
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const fetchAdminDetails = async () => {
     setLoading(true);
@@ -111,6 +117,43 @@ export default function PersonalDetails() {
     }
   };
 
+  const updateNewPassword = async (e) => {
+    e.preventDefault();
+    setUpdatePasswordLoading(true);
+    if (newPassword !== confirmPassword) {
+      return alert("Enter the new correct password! - backend");
+    }
+    const passwords = { currentPassword, newPassword };
+    try {
+      // add the endpoint here
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_API}/change-password`,
+        { passwords },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      alert(response.data.message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setChangePasswordFlag(false);
+      setAdminAccountEdit(false);
+    } catch (error) {
+      console.error(error);
+      if (error.response) {
+        alert(error.response.data.message);
+      }
+      setUpdatePasswordLoading(false);
+    } finally {
+      setUpdatePasswordLoading(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -161,6 +204,7 @@ export default function PersonalDetails() {
                               className="border border-red-600 bg-blue-300 w-full"
                               onClick={() => {
                                 setAdminAccountEdit(false);
+                                setChangePasswordFlag(false);
                               }}
                             >
                               Close
@@ -208,118 +252,184 @@ export default function PersonalDetails() {
         </>
       )}
 
-      {adminAccountEdit && (
-        <div className="mb-4 w-full p-2 flex justify-center mt-5">
-          <div className="w-[50%]">
-            <form onSubmit={saveNewAdminDetails}>
-              <div className="mb-4">
-                <label
-                  className="block text-sm font-medium text-gray-700"
-                  htmlFor="username"
-                >
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-sm font-medium text-gray-700"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-sm font-medium text-gray-700"
-                  htmlFor="phoneNo"
-                >
-                  Phone No
-                </label>
-                <input
-                  type="text"
-                  id="phoneNo"
-                  value={phoneNo}
-                  onChange={(e) => setPhoneNo(e.target.value)}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Gender
-                </label>
-                <div className="mt-1">
-                  <label className="inline-flex items-center mr-4">
+      {changePasswordFlag ? (
+        <>
+          <div className="flex w-full mt-5"></div>
+          <h1 className="text-center">Change password</h1>
+          <form onSubmit={updateNewPassword}>
+            <div className="mb-4 w-[50%] mx-auto mt-5">
+              <input
+                type="password"
+                id="currentpassword"
+                placeholder="Enter your current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="mb-4 w-[50%] mx-auto mt-5">
+              <input
+                type="password"
+                id="newpassword"
+                placeholder="Enter a new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="mb-4 w-[50%] mx-auto mt-5">
+              <input
+                type="password"
+                id="confirmpassword"
+                placeholder="Re-enter the new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="flex gap-2 justify-center">
+              <button type="submit" className="border border-green-600 p-1">
+                {updatePasswordLoading ? "updating..." : "update"}
+              </button>
+              <button
+                onClick={() => {
+                  setChangePasswordFlag(false);
+                  setAdminAccountEdit(false);
+                }}
+                className="border border-red-600 p-1"
+              >
+                Close
+              </button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <>
+          {adminAccountEdit && (
+            <div className="mb-4 w-full p-2 flex justify-center mt-5">
+              <div className="w-[50%]">
+                <form onSubmit={saveNewAdminDetails}>
+                  <div className="mb-4">
+                    <label
+                      className="block text-sm font-medium text-gray-700"
+                      htmlFor="username"
+                    >
+                      Username
+                    </label>
                     <input
-                      type="radio"
-                      value="male"
-                      checked={gender === "male"}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                      type="text"
+                      id="username"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                       required
                     />
-                    <span className="ml-2">Male</span>
-                  </label>
-                  <label className="inline-flex items-center">
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      className="block text-sm font-medium text-gray-700"
+                      htmlFor="email"
+                    >
+                      Email
+                    </label>
                     <input
-                      type="radio"
-                      value="female"
-                      checked={gender === "female"}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                       required
                     />
-                    <span className="ml-2">Female</span>
-                  </label>
-                  {/* Add more options as needed */}
-                </div>
-                <div className="mb-4">
-                  <label
-                    className="block text-sm font-medium text-gray-700"
-                    htmlFor="address"
-                  >
-                    Phone No
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                    required
-                  />
-                </div>
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      className="block text-sm font-medium text-gray-700"
+                      htmlFor="phoneNo"
+                    >
+                      Phone No
+                    </label>
+                    <input
+                      type="text"
+                      id="phoneNo"
+                      value={phoneNo}
+                      onChange={(e) => setPhoneNo(e.target.value)}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Gender
+                    </label>
+                    <div className="mt-1">
+                      <label className="inline-flex items-center mr-4">
+                        <input
+                          type="radio"
+                          value="male"
+                          checked={gender === "male"}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                          required
+                        />
+                        <span className="ml-2">Male</span>
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          value="female"
+                          checked={gender === "female"}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                          required
+                        />
+                        <span className="ml-2">Female</span>
+                      </label>
+                      {/* Add more options as needed */}
+                    </div>
+                    <div className="mb-4">
+                      <label
+                        className="block text-sm font-medium text-gray-700"
+                        htmlFor="address"
+                      >
+                        Phone No
+                      </label>
+                      <input
+                        type="text"
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <button
+                        className="border border-blue-300 p-1"
+                        onClick={() => setChangePasswordFlag(true)}
+                      >
+                        Change password
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button type="submit" className="border border-red-300 p-1">
+                      {updateLoading ? "saving..." : "save"}
+                    </button>
+                    <button
+                      className="border border-red-300 p1"
+                      onClick={clearAllInputFields}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="flex gap-2 mt-2">
-                <button type="submit" className="border border-red-300 p-1">
-                  {updateLoading ? "saving..." : "save"}
-                </button>
-                <button
-                  className="border border-red-300 p1"
-                  onClick={clearAllInputFields}
-                >
-                  Clear all
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );
