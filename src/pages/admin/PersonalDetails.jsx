@@ -66,24 +66,33 @@ export default function PersonalDetails() {
   const deleteAccount = async (e) => {
     e.preventDefault();
     setDeleteLoading(true);
+
+    const password = {
+      password: confirmPassword,
+    };
+
+    const endpoint = `${import.meta.env.VITE_BACKEND_API}/details/delete`;
+
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API}/details/delete`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }
-      );
+      const response = await axios.post(endpoint, password, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       alert(response.data.message);
       Cookies.remove("adminToken");
       Cookies.remove("adminRefreshToken");
     } catch (error) {
       console.error(error);
+      setConfirmPassword("");
       if (error.response) {
         console.log(error.response.data.message);
+        alert(error.response.data.message);
       }
     } finally {
       setDeleteLoading(false);
+      setConfirmPassword("");
     }
   };
 
@@ -234,20 +243,28 @@ export default function PersonalDetails() {
         <>
           <div className="w-100 flex flex-col items-center mt-5">
             <h1>Are you sure you want to delete your account?</h1>
-            <div className="flex gap-2">
-              <button
-                className="border border-red-300 p-1"
-                onClick={deleteAccount}
-              >
-                {deleteLoading ? "Deleting..." : "Delete"}
-              </button>
-              <button
-                className="border border-red-300 p-1"
-                onClick={() => setDeleteAccountFlag(false)}
-              >
-                Cancel
-              </button>
-            </div>
+            <form onSubmit={deleteAccount}>
+              <input
+                type="password"
+                id="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Enter your password to delete the account"
+                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                required
+              ></input>
+              <div className="flex gap-2 mt-2">
+                <button className="border border-red-300 p-1" type="submit">
+                  {deleteLoading ? "Deleting..." : "Delete"}
+                </button>
+                <button
+                  className="border border-red-300 p-1"
+                  onClick={() => setDeleteAccountFlag(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </>
       )}
