@@ -1,40 +1,38 @@
 import axios from "axios";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
-// Define the refreshAccessToken function
-export const refreshAccessToken = async () => {
-  //   const token = Cookies.get("adminToken");
-  //   const accountId = jwtDecode(token).adminId;
-  const navigate = useNavigate();
-  console.log(
-    "Token to send to backend, backup token--->",
-    Cookies.get("adminRefreshToken")
-  );
 
+// import { useNavigate } from "react-router-dom";
+// Define the refreshAccessToken function
+export const refreshAccessToken = async (token, adminId, url) => {
+  console.log("You clicked the function");
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_API}/refresh-token`,
-      {},
+      `${url}/${adminId}`,
+      {}, // blank body
       {
         headers: {
-          Authorization: `Bearer ${Cookies.get("adminRefreshToken")}`, // this 'adminRefreshToken' contains the adminId
+          Authorization: `Bearer ${token}`, // this 'adminRefreshToken' contains the adminId
           "Content-Type": "application/json",
         },
+        withCredentials: true,
       }
     );
-
+    const output = response.data.token;
+    const message = response.data.message;
+    console.log("New token --->", response.data.token);
+    return { output, message };
     // Set the new tokens in cookies
-    Cookies.set("adminToken", response.data.token);
-    Cookies.set("adminRefreshToken", response.data.refreshToken);
-
-    return response.data.token; // Return the new token if needed
+    // Cookies.set("adminToken", response.data.token);
+    // Cookies.set("adminRefreshToken", response.data.refreshToken);
   } catch (error) {
-    console.error("Failed to refresh token:", error);
-    // Handle error (e.g., redirect to login if refresh fails)
-    // Optionally, clear cookies and navigate to login
-    Cookies.remove("adminToken");
-    Cookies.remove("adminRefreshToken");
-    navigate("/");
+    console.error(error);
+
+    if (error.response) {
+      console.log(error.response.data.message);
+    } else if (error.response.data.message == "Invalid token! - backend") {
+      console.error("Invalid token!");
+    } else if (error.response.data.message === "Token expired! - backend") {
+      console.error("Token expired!");
+    }
   }
 };
 

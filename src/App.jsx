@@ -5,16 +5,18 @@ import OrderPage from "./pages/OrderPage";
 import PersonalDetails from "./pages/admin/PersonalDetails";
 import { OtpVerify } from "./pages/OtpVerify";
 import Products from "./pages/productsManagement/Products";
+import TestingPage from "./pages/TestingPage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Homepage />} index />
-        <Route path="/admin/verify" element={<OtpVerify />} index />
-        <Route path="/admin/orders" element={<OrderPage />} index />
-        <Route path="/admin/profile" element={<PersonalDetails />} index />
-        <Route path="/admin/products" element={<Products />} index />
+        <Route path="/admin/verify" element={<OtpVerify />} />
+        <Route path="/admin/orders" element={<OrderPage />} />
+        <Route path="/admin/profile" element={<PersonalDetails />} />
+        <Route path="/admin/products" element={<Products />} />
+        <Route path="/admin/refresh-token" element={<TestingPage />} />
       </Routes>
     </BrowserRouter>
   );
