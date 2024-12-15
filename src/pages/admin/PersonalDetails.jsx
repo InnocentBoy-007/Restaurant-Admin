@@ -3,6 +3,10 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * for adding a mechanism to retrieve a new token using a refresh token, refer to the order page (order.jsx)
+ */
+
 export default function PersonalDetails() {
   const navigate = useNavigate();
   const token = Cookies.get("adminToken");

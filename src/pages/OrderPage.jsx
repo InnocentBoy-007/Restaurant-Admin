@@ -3,10 +3,17 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 import refreshAccessToken from "./RefreshToken";
+import { jwtDecode } from "jwt-decode";
 
 export default function OrderPage() {
-  const token = Cookies.get("adminToken");
   const navigate = useNavigate();
+
+  const token = Cookies.get("adminToken");
+  const decodedToken = jwtDecode(token);
+
+  if (!token) {
+    navigate("/");
+  }
   const [orderDetails, setOrderDetails] = useState([]);
   // this is the primary token
 
@@ -18,66 +25,109 @@ export default function OrderPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutFlag, setLogoutFlag] = useState(false);
 
-  const tokenAvailability = () => {
-    if (!token) {
-      navigate("/");
-    }
-  };
+  const refreshToken = Cookies.get("adminRefreshToken");
+  const adminId = decodedToken.adminId;
+  const refreshToken_URL = `${import.meta.env.VITE_BACKEND_API}/token`;
 
-  useEffect(() => {
-    tokenAvailability();
-  }, []);
-
+  // this function includes the mechanism for retrieving a new token using refresh token
   const fetchAdminDetails = async () => {
+    let isRefreshing = false; // Flag to prevent multiple refresh calls
+    let newToken = null; // Store the new token if refreshed
+
+    const backupFunction = async () => {
+      if (!isRefreshing) {
+        isRefreshing = true; // Set the flag to true
+        try {
+          const { output } = await refreshAccessToken(
+            refreshToken,
+            adminId,
+            refreshToken_URL
+          );
+          newToken = output; // Store the new token
+        } catch (error) {
+          console.error("Failed to refresh token:", error);
+          // Handle refresh token failure (e.g., log out user)
+        } finally {
+          isRefreshing = false; // Reset the flag
+        }
+      }
+      return fetchAdminDetails(); // Retry fetching admin details
+    };
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/details`,
-        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
+        {
+          headers: { Authorization: `Bearer ${newToken || token}` },
+          withCredentials: true,
+        }
       );
       setAdminName(response.data.adminDetails.name);
     } catch (error) {
       console.log(error);
       if (error.response) {
-        alert(error.response.data.message);
+        if (error.response.data.message === "Token expired! - backend") {
+          await backupFunction(); // Call backup function if token expired
+        } else {
+          alert(error.response.data.message);
+        }
+      } else {
+        await backupFunction(); // Call backup function for other errors
       }
     }
   };
 
+  // this function inclues the mechanism for retrieving a new token using refresh token
   const fetchOrderDetails = async () => {
-    // console.log("token-->", token);
-
-    if (!token) {
-      //   console.log("No token found!");
-      return;
-    }
     setLoading(true);
+    let isRefreshing = false;
+    let newToken = null;
+
+    const backupFunction = async () => {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const { output } = await refreshAccessToken(
+            refreshToken,
+            adminId,
+            refreshToken_URL
+          );
+          newToken = output;
+        } catch (error) {
+          console.error(error);
+        } finally {
+          isRefreshing = false; // Reset the flag
+        }
+      }
+      return fetchOrderDetails();
+    };
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/orders`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token || newToken}`,
           },
           withCredentials: true,
         }
       );
+      setLoading(false);
       setOrderDetails(response.data.orders);
+
       // console.log(response.data);
     } catch (error) {
       console.log("Error-->", error);
 
       if (error.response) {
-        console.log(error.response.data.message);
-
-        const newToken = await refreshAccessToken(navigate);
-        if (newToken) {
-          return fetchOrderDetails();
+        if (error.response.data.message === "Token expired! - backend") {
+          await backupFunction();
         } else {
-          console.log(error);
+          alert(error.response.data.message);
         }
+      } else {
+        await backupFunction();
       }
-    } finally {
-      setLoading(false);
     }
   };
 

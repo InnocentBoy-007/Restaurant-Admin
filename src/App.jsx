@@ -5,7 +5,6 @@ import OrderPage from "./pages/OrderPage";
 import PersonalDetails from "./pages/admin/PersonalDetails";
 import { OtpVerify } from "./pages/OtpVerify";
 import Products from "./pages/productsManagement/Products";
-import TestingPage from "./pages/TestingPage";
 
 export default function App() {
   return (
@@ -16,7 +15,6 @@ export default function App() {
         <Route path="/admin/orders" element={<OrderPage />} />
         <Route path="/admin/profile" element={<PersonalDetails />} />
         <Route path="/admin/products" element={<Products />} />
-        <Route path="/admin/refresh-token" element={<TestingPage />} />
       </Routes>
     </BrowserRouter>
   );

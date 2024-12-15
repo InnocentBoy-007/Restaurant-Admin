@@ -3,6 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 
+/**
+ *  for adding a mechanism to retrieve a new token using a refresh token, please refer to order page (order.jsx)
+ */
+
 export default function Products() {
   const navigate = useNavigate();
   const token = Cookies.get("adminToken");
