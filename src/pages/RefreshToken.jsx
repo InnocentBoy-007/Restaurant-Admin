@@ -1,15 +1,16 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-export const refreshAccessToken = async (token, adminId, url) => {
+export const refreshAccessToken = async (refreshToken, adminId) => {
   console.log("You clicked the function"); // function check
+  const URL = `${import.meta.env.VITE_BACKEND_API}/token/${adminId}`;
   try {
     const response = await axios.post(
-      `${url}/${adminId}`,
+      `${URL}`,
       {}, // blank body
       {
         headers: {
-          Authorization: `Bearer ${token}`, // this 'adminRefreshToken' contains the adminId
+          Authorization: `Bearer ${refreshToken}`, // this 'adminRefreshToken' contains the adminId
           "Content-Type": "application/json",
         },
         withCredentials: true,

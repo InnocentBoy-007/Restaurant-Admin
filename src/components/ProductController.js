@@ -8,6 +8,7 @@ class ProductController {
         try {
             const response = await axios.post(URL, body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
+            return;
         } catch (error) {
             console.error(error);
             if (error.response) {
@@ -32,8 +33,9 @@ class ProductController {
     async deletePoduct(productId) {
         const URL = `${import.meta.env.VITE_BACKEND_API}/v1/admin/products/delete_product/${productId}`;
         try {
-            const response = await axios.delete(URL, { headers: { "Content-Type": 'application/json', Authorization: `Bearer ${token}` }, withCredentials: true });
+            const response = await axios.delete(URL, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
+            return;
         } catch (error) {
             console.error(error);
             if (error.response) {

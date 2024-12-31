@@ -27,23 +27,19 @@ export default function OrderPage() {
 
   const refreshToken = Cookies.get("adminRefreshToken");
   const adminId = decodedToken.adminId;
-  const refreshToken_URL = `${import.meta.env.VITE_BACKEND_API}/token`;
 
   // this function includes the mechanism for retrieving a new token using refresh token
   const fetchAdminDetails = async () => {
     let isRefreshing = false; // Flag to prevent multiple refresh calls
+    // I think, I don't need to store the new token in a variable since the cookies will be updated automatically from the refreshtoken section
     let newToken = null; // Store the new token if refreshed
 
     const backupFunction = async () => {
       if (!isRefreshing) {
         isRefreshing = true; // Set the flag to true
         try {
-          const { output } = await refreshAccessToken(
-            refreshToken,
-            adminId,
-            refreshToken_URL
-          );
-          newToken = output; // Store the new token
+          const response = await refreshAccessToken(refreshToken, adminId);
+          newToken = response.output; // Store the new token
         } catch (error) {
           console.error("Failed to refresh token:", error);
           // Handle refresh token failure (e.g., log out user)
@@ -198,7 +194,7 @@ export default function OrderPage() {
     setLogoutLoading(true);
     try {
       const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API}/logout`,
+        `${import.meta.env.VITE_BACKEND_API}/account/logout`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -216,7 +212,7 @@ export default function OrderPage() {
       navigate("/");
       setLogoutLoading(false);
       if (error.response) {
-        const newToken = await refreshAccessToken(); // this function sends the refresh token to fetch a new primary token
+        const newToken = await refreshAccessToken(token, adminId); // this function sends the refresh token to fetch a new primary token
         if (newToken) {
           return logOut(e);
         } else {

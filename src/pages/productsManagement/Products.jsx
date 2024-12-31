@@ -40,7 +40,6 @@ export default function Products() {
     try {
       const response = await axios.get(`${endpoint}/product/details`);
       setProductDetails(response.data.products);
-      console.log(response.data.products);
     } catch (error) {
       if (error.response) {
         setNoProductsMessage(error.response.data.message);
@@ -64,13 +63,13 @@ export default function Products() {
         productQuantity: parseInt(productQuantity),
       },
     };
-    const response = await ProductController.addProduct(body);
-    if (response) {
+    try {
+      await ProductController.addProduct(body);
       clearUpInputFields();
-      fetchProducts(); // update the frontend after successfully adding a new product
-      setAddNewProductFlag(false);
+      await fetchProducts(); // update the frontend after successfully adding a new product
       setAddNewProductLoading(false);
-    } else {
+      setAddNewProductFlag(false);
+    } catch (error) {
       setAddNewProductLoading(false);
     }
   };
@@ -78,26 +77,13 @@ export default function Products() {
   const deleteProduct = async (e, productId) => {
     e.preventDefault();
     setDeleteProductLoading(true);
-    const endpoint = `${import.meta.env.VITE_BACKEND_API}/products/delete`;
     try {
-      const response = await axios.delete(endpoint + `/${productId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
+      await ProductController.deleteProduct(productId);
       setProductId("");
-      fetchProducts();
-      setProductDeleteFlag(false);
-      alert(response.data.message);
-    } catch (error) {
-      console.error(error);
+      await fetchProducts();
       setDeleteProductLoading(false);
-      if (error.response) {
-        console.log(error.response.data.message);
-      }
-    } finally {
+      setProductDeleteFlag(false);
+    } catch (error) {
       setDeleteProductLoading(false);
     }
   };
