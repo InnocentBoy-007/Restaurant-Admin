@@ -76,7 +76,7 @@ export default function Homepage() {
     setSignInLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/signin`,
+        `${import.meta.env.VITE_BACKEND_API}/account/signin`,
         {
           adminDetails: {
             email: signInEmail,

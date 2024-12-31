@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import ProductController from "../../components/ProductController";
 
 /**
  *  for adding a mechanism to retrieve a new token using a refresh token, please refer to order page (order.jsx)
@@ -37,7 +38,7 @@ export default function Products() {
     setFetchProductLoading(true);
     const endpoint = import.meta.env.VITE_BACKEND_API2;
     try {
-      const response = await axios.get(`${endpoint}/products`);
+      const response = await axios.get(`${endpoint}/product/details`);
       setProductDetails(response.data.products);
       console.log(response.data.products);
     } catch (error) {
@@ -56,33 +57,20 @@ export default function Products() {
   const addNewproducts = async (e) => {
     e.preventDefault();
     setAddNewProductLoading(true);
-    const endpoint = import.meta.env.VITE_BACKEND_API;
-    const data = {
+    const body = {
       productDetails: {
         productName,
         productPrice: parseInt(productPrice),
         productQuantity: parseInt(productQuantity),
       },
     };
-    try {
-      const response = await axios.post(`${endpoint}/products/add`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-      console.log(response.data.message);
+    const response = await ProductController.addProduct(body);
+    if (response) {
       clearUpInputFields();
       fetchProducts(); // update the frontend after successfully adding a new product
       setAddNewProductFlag(false);
-    } catch (error) {
-      console.error(error);
       setAddNewProductLoading(false);
-      if (error.response) {
-        console.log(error.response.data.message);
-      }
-    } finally {
+    } else {
       setAddNewProductLoading(false);
     }
   };
