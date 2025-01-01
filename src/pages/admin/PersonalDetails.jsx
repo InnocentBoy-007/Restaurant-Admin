@@ -25,7 +25,7 @@ export default function PersonalDetails() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updatePasswordLoading, setUpdatePasswordLoading] = useState(false);
 
-  const [name, setName] = useState("");
+  const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
   const [gender, setGender] = useState("");
@@ -48,7 +48,7 @@ export default function PersonalDetails() {
         }
       );
       setAdminDetails(response.data.adminDetails);
-      setName(response.data.adminDetails.name);
+      setUserName(response.data.adminDetails.username);
       setEmail(response.data.adminDetails.email);
       setPhoneNo(response.data.adminDetails.phoneNo);
       setGender(response.data.adminDetails.gender);
@@ -101,7 +101,7 @@ export default function PersonalDetails() {
   };
 
   const clearAllInputFields = () => {
-    setName("");
+    setUserName("");
     setEmail("");
     setPhoneNo("");
     setGender("");
@@ -178,7 +178,7 @@ export default function PersonalDetails() {
       {!loading ? (
         <div className="w-full p-2">
           <div className="flex justify-between">
-            <h1 className="p-2">{adminDetails.name} </h1>
+            <h1 className="p-2">{adminDetails.username} </h1>
             {!deleteAccountFlag && (
               <>
                 <button
@@ -343,8 +343,8 @@ export default function PersonalDetails() {
                     <input
                       type="text"
                       id="username"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      value={username}
+                      onChange={(e) => setUserName(e.target.value)}
                       className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                       required
                     />

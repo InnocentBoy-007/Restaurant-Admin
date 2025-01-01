@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
+import PrimaryActions from "../services/PrimaryActions";
 
 export default function Homepage() {
   const [laoding, setLoading] = useState(false);
@@ -71,34 +72,23 @@ export default function Homepage() {
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
+  // function for signing in
   const signInHandler = async (e) => {
     e.preventDefault();
     setSignInLoading(true);
+    const body = {
+      adminDetails: {
+        email: signInEmail,
+        password: signInPassword,
+      },
+    };
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/account/signin`,
-        {
-          adminDetails: {
-            email: signInEmail,
-            password: signInPassword,
-          },
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      alert(response.data.message);
+      await PrimaryActions.signIn(body);
       setSignInEmail(""); // emptied the email for future use
-      // console.log(response.data.message);
-      Cookies.set("adminToken", response.data.token);
-      Cookies.set("adminRefreshToken", response.data.refreshToken);
       navigate("/admin/orders");
+      setSignInLoading(false);
       // return { token };
     } catch (error) {
-      if (error.response) {
-        console.log(error.response.data.message);
-        alert(error.response.data.message);
-      }
-      console.log(error);
-    } finally {
       setSignInLoading(false);
     }
   };
