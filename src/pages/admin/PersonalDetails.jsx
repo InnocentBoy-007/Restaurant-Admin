@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import SecondaryActions from "../../services/SecondaryActions";
 
 /**
  * for adding a mechanism to retrieve a new token using a refresh token, refer to the order page (order.jsx)
@@ -67,34 +68,19 @@ export default function PersonalDetails() {
     fetchAdminDetails();
   }, []);
 
+  // function to delete account
   const deleteAccount = async (e) => {
     e.preventDefault();
     setDeleteLoading(true);
 
-    const password = {
-      password: confirmPassword,
-    };
-
-    const endpoint = `${import.meta.env.VITE_BACKEND_API}/details/delete`;
-
     try {
-      const response = await axios.post(endpoint, password, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      alert(response.data.message);
-      Cookies.remove("adminToken");
-      Cookies.remove("adminRefreshToken");
-    } catch (error) {
-      console.error(error);
+      await SecondaryActions.deleteAccount({ password: confirmPassword });
+
+      setDeleteLoading(false);
       setConfirmPassword("");
-      if (error.response) {
-        console.log(error.response.data.message);
-        alert(error.response.data.message);
-      }
-    } finally {
+    } catch (error) {
+      console.log(error);
+
       setDeleteLoading(false);
       setConfirmPassword("");
     }
@@ -114,7 +100,7 @@ export default function PersonalDetails() {
     try {
       const response = await axios.patch(
         `${import.meta.env.VITE_BACKEND_API}/details/update`,
-        { adminDetails: { name, email, phoneNo, gender, address } },
+        { adminDetails: { username, email, phoneNo, gender, address } },
         { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
       );
       alert(response.data.message);

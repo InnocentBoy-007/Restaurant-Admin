@@ -12,20 +12,30 @@ export const OtpVerify = () => {
   const confirmOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const token = Cookies.get("adminToken");
+
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/verify`,
+        `${import.meta.env.VITE_BACKEND_API}/account/signup/verifyOTP`,
         { otp: OTP },
-        { headers: { "Content-Type": "application/json" } }
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
       );
       alert(`${response.data.message}\n${response.data.verification}`);
       setLoading(false);
-      Cookies.set("adminToken", response.data.token, { expires: 1 }); //expires at 1 day
-      Cookies.set("adminRefreshToken", response.data.refreshToken); //expires at 1 day
       navigate("/admin/orders");
     } catch (error) {
       setLoading(false);
       console.log(error);
+
+      // if anything goes wrong delete the tokens
+      Cookies.remove("adminToken");
+      Cookies.remove("adminRefreshToken");
     }
   };
   return (

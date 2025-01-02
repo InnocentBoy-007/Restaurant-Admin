@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "axios";
-import PrimaryActions from "../services/PrimaryActions";
+import primaryActions from "../services/PrimaryActions";
 
 export default function Homepage() {
   const [laoding, setLoading] = useState(false);
@@ -41,32 +41,25 @@ export default function Homepage() {
   const signUpHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const body = {
+      adminDetails: {
+        username,
+        email,
+        address,
+        password,
+        phoneNo,
+        gender,
+        age: parseInt(age),
+      },
+    };
+
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/signup`,
-        {
-          adminDetails: {
-            name: username,
-            email,
-            address,
-            password,
-            phoneNo,
-            gender,
-            age: parseInt(age),
-          },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      alert(response.data.message);
+      await primaryActions.signUp(body);
       setLoading(false);
       navigate("/admin/verify");
     } catch (error) {
       setLoading(false);
-      console.log(error);
     }
   };
 
@@ -83,7 +76,8 @@ export default function Homepage() {
       },
     };
     try {
-      await PrimaryActions.signIn(body);
+      const response = await primaryActions.signIn(body);
+      if (!response) return; // terminate the try block once the response went wrong
       setSignInEmail(""); // emptied the email for future use
       navigate("/admin/orders");
       setSignInLoading(false);
