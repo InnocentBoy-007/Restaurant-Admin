@@ -13,19 +13,19 @@ export const OtpVerify = () => {
     e.preventDefault();
     setLoading(true);
     const token = Cookies.get("adminToken");
+    const URL = `${import.meta.env.VITE_BACKEND_API}/account/signup/verifyOTP`;
+    const body = {
+      otp: OTP,
+    };
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_API}/account/signup/verifyOTP`,
-        { otp: OTP },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axios.post(URL, body, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
       alert(`${response.data.message}\n${response.data.verification}`);
       setLoading(false);
       navigate("/admin/orders");

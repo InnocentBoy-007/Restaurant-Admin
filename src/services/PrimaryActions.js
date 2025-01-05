@@ -2,34 +2,36 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 class PrimaryActions {
-    async getToken() {
-        const token = Cookies.get("adminToken");
-        if (!token) throw new Error("Token is not found!");
-        return token;
-    }
-
     async signIn(body) {
         if (!body) throw new Error("Body is undefined or null!");
         const URL = `${import.meta.env.VITE_BACKEND_API}/account/signin`
 
         try {
             const response = await axios.post(URL, body, { headers: { 'Content-Type': 'application/json' } });
-            Cookies.set("adminToken", response.data.token);
-            Cookies.set("adminRefreshToken", response.data.refreshToken);
-            alert(response.data.message);
-            // return;
-            // it'll just explicitly return 'undefined'
+            const { token, refreshToken, message } = response.data;
+            if (!token || !refreshToken) throw new Error("Invalid token response!");
+
+            Cookies.set("adminToken", token);
+            Cookies.set("adminRefreshToken", refreshToken);
+            alert(message);
+
+            return true;
         } catch (error) {
             console.error(error);
             if (error.response) {
                 alert(error.response.data.message);
+            } else if (error.request) {
+                alert("Network error! Please try again!");
+            } else {
+                alert("An unexpected error occured while trying to signIn!");
             }
+
+            return false;
         }
     }
 
     async signUp(body) {
         if (!body) throw new Error("Body is undefined or null!");
-
         const URL = `${import.meta.env.VITE_BACKEND_API}/account/signup`;
 
         try {
@@ -49,8 +51,7 @@ class PrimaryActions {
         }
     }
 
-    async logout() {
-        const token = await this.getToken();
+    async logout(token) {
         const URL = `${import.meta.env.VITE_BACKEND_API}/account/logout`
 
         try {
