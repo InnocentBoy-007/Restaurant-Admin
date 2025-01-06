@@ -40,12 +40,12 @@ export default function SignIn() {
 
     try {
       const response = await primaryActions.signIn(data);
-      if (!response) {
+      if (response.success) {
+        Cookies.set("adminToken", response.token);
+        Cookies.set("adminRefreshToken", response.refreshToken);
         resetForm();
-        return;
+        navigate("/admin/orders");
       }
-      resetForm();
-      navigate("/admin/orders");
     } catch (error) {
       resetForm();
     }

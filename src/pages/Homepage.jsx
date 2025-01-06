@@ -46,9 +46,13 @@ export default function Homepage() {
     };
 
     try {
-      await primaryActions.signUp(data);
-      setLoading(false);
-      navigate("/admin/verify");
+      const response = await primaryActions.signUp(data);
+      if (response.success) {
+        Cookies.set("adminToken", response.token);
+        Cookies.set("adminRefreshToken", response.refreshToken);
+        setLoading(false);
+        navigate("/admin/verify");
+      }
     } catch (error) {
       setLoading(false);
     }

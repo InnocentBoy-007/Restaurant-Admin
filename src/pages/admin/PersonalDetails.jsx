@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import SecondaryActions from "../../services/SecondaryActions";
+import secondaryActions from "../../services/SecondaryActions";
 
 /**
  * for adding a mechanism to retrieve a new token using a refresh token, refer to the order page (order.jsx)
@@ -11,11 +12,13 @@ import SecondaryActions from "../../services/SecondaryActions";
 export default function PersonalDetails() {
   const navigate = useNavigate();
   const token = Cookies.get("adminToken");
+  // const refreshToken = Cookies.get("adminRefreshToken"); // add later
 
   if (!token) {
     navigate("/");
   }
 
+  // loading can be reduced to only one loading hook (implement later)
   const [adminDetails, setAdminDetails] = useState({});
   const [adminAccountEdit, setAdminAccountEdit] = useState(false);
   const [changePasswordFlag, setChangePasswordFlag] = useState(false);
@@ -74,19 +77,24 @@ export default function PersonalDetails() {
     setDeleteLoading(true);
 
     try {
-      await SecondaryActions.deleteAccount({ password: confirmPassword });
+      const response = await SecondaryActions.deleteAccount(
+        { password: confirmPassword },
+        token
+      );
 
-      setDeleteLoading(false);
-      setConfirmPassword("");
+      if (response.success) {
+        setDeleteLoading(false);
+        setConfirmPassword("");
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+      }
     } catch (error) {
-      console.log(error);
-
       setDeleteLoading(false);
       setConfirmPassword("");
     }
   };
 
-  const clearAllInputFields = () => {
+  const resetForm = () => {
     setUserName("");
     setEmail("");
     setPhoneNo("");
@@ -94,25 +102,31 @@ export default function PersonalDetails() {
     setAddress("");
   };
 
-  const saveNewAdminDetails = async (e) => {
+  const updateAdminDetails = async (e) => {
     e.preventDefault();
     setUpdateLoading(true);
+
+    const data = {
+      updateDetails: {
+        username,
+        email,
+        phoneNo,
+        gender,
+        address,
+      },
+    };
+
     try {
-      const response = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_API}/details/update`,
-        { adminDetails: { username, email, phoneNo, gender, address } },
-        { headers: { Authorization: `Bearer ${token}` }, withCredentials: true }
-      );
-      alert(response.data.message);
-      setAdminAccountEdit(false);
-      fetchAdminDetails();
-    } catch (error) {
-      console.error(error);
-      if (error.response) {
-        console.log(error.response.data.message);
+      const response = await secondaryActions.updateAccount(data, token);
+      if (response.success) {
+        setUpdateLoading(false);
+        setAdminAccountEdit(false);
+        resetForm();
+        fetchAdminDetails();
       }
-    } finally {
+    } catch (error) {
       setUpdateLoading(false);
+      resetForm();
     }
   };
 
@@ -318,7 +332,7 @@ export default function PersonalDetails() {
           {adminAccountEdit && (
             <div className="mb-4 w-full p-2 flex justify-center mt-5">
               <div className="w-[50%]">
-                <form onSubmit={saveNewAdminDetails}>
+                <form onSubmit={updateAdminDetails}>
                   <div className="mb-4">
                     <label
                       className="block text-sm font-medium text-gray-700"
@@ -427,7 +441,7 @@ export default function PersonalDetails() {
                     </button>
                     <button
                       className="border border-red-300 p1"
-                      onClick={clearAllInputFields}
+                      onClick={resetForm}
                     >
                       Clear all
                     </button>
