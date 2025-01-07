@@ -4,21 +4,23 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import refreshAccessToken from "./RefreshToken";
 import { jwtDecode } from "jwt-decode";
+import services from "../services/Service";
 
 export default function OrderPage() {
   const navigate = useNavigate();
 
   const token = Cookies.get("adminToken");
+  // const refreshtToken = Cookies.get("adminRefreshToken"); // add later
   const decodedToken = jwtDecode(token);
 
   if (!token) {
     navigate("/");
   }
   const [orderDetails, setOrderDetails] = useState([]);
-  // this is the primary token
 
   const [adminName, setAdminName] = useState("");
 
+  // reduce the loadings to only a single loading
   const [loading, setLoading] = useState(false);
   const [acceptLoading, setAcceptLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
@@ -127,64 +129,34 @@ export default function OrderPage() {
     }
   };
 
-  const acceptOrder = async (e, orderId, productId) => {
+  // function to accept order
+  const acceptOrder = async (e, orderId) => {
     e.preventDefault();
     setAcceptLoading(true);
-    if (!token) {
-      console.log("No token found!");
-      return;
-    }
+
     try {
-      const response = await axios.post(
-        `${
-          import.meta.env.VITE_BACKEND_API
-        }/orders/accept/${orderId}/${productId}`,
-        {},
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-      fetchOrderDetails();
-      //   console.log(response.data.message);
-      alert(response.data.message);
+      const response = await services.acceptOrder(orderId, token);
+      if (response.success) {
+        fetchOrderDetails();
+        setAcceptLoading(false);
+      }
     } catch (error) {
-      console.log(error);
-      console.log(error.response.data.message);
-    } finally {
       setAcceptLoading(false);
     }
   };
 
+  // function to reject order
   const rejectOrder = async (e, orderId) => {
     e.preventDefault();
     setRejectLoading(true);
-    // console.log("Token--->", token); // it works
 
-    if (!token) {
-      console.log("No token found!");
-      return;
-    }
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_BACKEND_API}/orders/reject/${orderId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-      alert(response.data.message);
-      fetchOrderDetails();
-      console.log(response.data);
+      const response = await services.rejectOrder(orderId, token);
+      if (response.success) {
+        fetchOrderDetails();
+        setRejectLoading(false);
+      }
     } catch (error) {
-      console.log(error);
-    } finally {
       setRejectLoading(false);
     }
   };
@@ -299,26 +271,24 @@ export default function OrderPage() {
                         <td>{order.totalPrice}</td>
                         <td>{order.orderTime}</td>
                         <td>
-                          {order.acceptedByAdmin === "pending" ? (
+                          {order.status === "pending" ? (
                             <>
-                              {order.acceptedByAdmin}
+                              {order.status}
                               <button
-                                onClick={(e) =>
-                                  acceptOrder(e, order._id, order.productId)
-                                }
+                                onClick={(e) => acceptOrder(e, order._id)}
                                 style={{ border: "2px solid blue" }}
                               >
                                 {acceptLoading ? "accepting..." : "accept"}
                               </button>
                               <button
-                                style={{ border: "2px solid red" }}
                                 onClick={(e) => rejectOrder(e, order._id)}
+                                style={{ border: "2px solid red" }}
                               >
                                 {rejectLoading ? "rejecting..." : "reject"}
                               </button>
                             </>
                           ) : (
-                            <span>{order.acceptedByAdmin}</span>
+                            <span>{order.status}</span>
                           )}
                         </td>
                         <td>{order.orderDispatchedTime}</td>

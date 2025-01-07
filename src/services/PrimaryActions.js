@@ -39,7 +39,13 @@ class PrimaryActions {
             return { token, refreshToken, success: true };
         } catch (error) {
             console.error(error);
-            if (error.response) alert(error.response.data.message);
+            if (error.response) {
+                alert(error.response.data.message)
+            } else if (error.request) {
+                alert("Network error! Please try again later!");
+            } else {
+                alert("An unexpected error occured while trying to signup!");
+            }
         }
     }
 
@@ -55,6 +61,10 @@ class PrimaryActions {
             console.error(error);
             if (error.response) {
                 alert(error.response.data.message);
+            } else if (error.request) {
+                alert("Network error! Please try again later!");
+            } else {
+                alert("An unexpected error occured while trying to logout!");
             }
         }
     }
