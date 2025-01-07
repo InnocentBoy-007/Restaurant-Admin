@@ -47,7 +47,8 @@ export default function SignIn() {
         navigate("/admin/orders");
       }
     } catch (error) {
-      resetForm();
+      // keep the email as it is
+      setPassword("");
     }
   };
 

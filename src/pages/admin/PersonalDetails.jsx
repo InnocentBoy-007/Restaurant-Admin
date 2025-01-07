@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import SecondaryActions from "../../services/SecondaryActions";
 import secondaryActions from "../../services/SecondaryActions";
 
 /**
@@ -18,32 +17,20 @@ export default function PersonalDetails() {
     navigate("/");
   }
 
-  // loading can be reduced to only one loading hook (implement later)
   const [adminDetails, setAdminDetails] = useState({});
-  const [adminAccountEdit, setAdminAccountEdit] = useState(false);
-  const [changePasswordFlag, setChangePasswordFlag] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [password, setPassword] = useState("");
+
+  // flags
+  const [editAccountFlag, setEditAccountFlag] = useState(false);
   const [deleteAccountFlag, setDeleteAccountFlag] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [updatePasswordLoading, setUpdatePasswordLoading] = useState(false);
-
-  const [username, setUserName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNo, setPhoneNo] = useState("");
-  const [gender, setGender] = useState("");
-  const [address, setAddress] = useState("");
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   const fetchAdminDetails = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/details`,
+        `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,11 +39,6 @@ export default function PersonalDetails() {
         }
       );
       setAdminDetails(response.data.adminDetails);
-      setUserName(response.data.adminDetails.username);
-      setEmail(response.data.adminDetails.email);
-      setPhoneNo(response.data.adminDetails.phoneNo);
-      setGender(response.data.adminDetails.gender);
-      setAddress(response.data.adminDetails.address);
     } catch (error) {
       console.error(error);
       if (error.response) {
@@ -67,383 +49,131 @@ export default function PersonalDetails() {
     }
   };
 
+  const deleteAccount = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await secondaryActions.DeleteAccount(
+        { password },
+        token
+      );
+      if (response.success) {
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+        navigate("/");
+      }
+    } finally {
+      setPassword("");
+      setDeleteAccountFlag(false);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAdminDetails();
   }, []);
 
-  // function to delete account
-  const deleteAccount = async (e) => {
-    e.preventDefault();
-    setDeleteLoading(true);
-
-    try {
-      const response = await SecondaryActions.deleteAccount(
-        { password: confirmPassword },
-        token
-      );
-
-      if (response.success) {
-        setDeleteLoading(false);
-        setConfirmPassword("");
-        Cookies.remove("adminToken");
-        Cookies.remove("adminRefreshToken");
-      }
-    } catch (error) {
-      setDeleteLoading(false);
-      setConfirmPassword("");
-    }
-  };
-
-  const resetForm = () => {
-    setUserName("");
-    setEmail("");
-    setPhoneNo("");
-    setGender("");
-    setAddress("");
-  };
-
-  const updateAdminDetails = async (e) => {
-    e.preventDefault();
-    setUpdateLoading(true);
-
-    const data = {
-      updateDetails: {
-        username,
-        email,
-        phoneNo,
-        gender,
-        address,
-      },
-    };
-
-    try {
-      const response = await secondaryActions.updateAccount(data, token);
-      if (response.success) {
-        setUpdateLoading(false);
-        setAdminAccountEdit(false);
-        resetForm();
-        fetchAdminDetails();
-      }
-    } catch (error) {
-      setUpdateLoading(false);
-      resetForm();
-    }
-  };
-
-  const updateNewPassword = async (e) => {
-    e.preventDefault();
-    setUpdatePasswordLoading(true);
-    if (newPassword !== confirmPassword) {
-      return alert("Enter the new correct password! - backend");
-    }
-    const passwords = { currentPassword, newPassword };
-    try {
-      // add the endpoint here
-      const response = await axios.patch(
-        `${import.meta.env.VITE_BACKEND_API}/change-password`,
-        { passwords },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      alert(response.data.message);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setChangePasswordFlag(false);
-      setAdminAccountEdit(false);
-    } catch (error) {
-      console.error(error);
-      if (error.response) {
-        alert(error.response.data.message);
-      }
-      setUpdatePasswordLoading(false);
-    } finally {
-      setUpdatePasswordLoading(false);
-    }
-  };
-
   return (
     <>
-      <div
-        className="w-full text-center p-4 bg-blue-300 cursor-pointer"
-        onClick={() => navigate("/admin/orders")}
-      >
-        Back
-      </div>
-      {!loading ? (
-        <div className="w-full p-2">
-          <div className="flex justify-between">
-            <h1 className="p-2">{adminDetails.username} </h1>
-            {!deleteAccountFlag && (
-              <>
-                <button
-                  className="border border-red-600 p-1"
-                  onClick={() => setDeleteAccountFlag(true)}
-                >
-                  Delete Account
-                </button>
-              </>
-            )}
-          </div>
-          <div>
-            {!adminDetails ? (
-              "An error occured while fetching your account details! Sorry for the inconvenience!"
-            ) : (
-              <>
-                <table className="w-full border border-red-300 mt-2">
-                  <thead>
-                    <tr>
-                      <th>Account ID</th>
-                      <th>Email</th>
-                      <th>Phone No</th>
-                      <th>Gender</th>
-                      <th>Address</th>
-                      <th>
-                        {!adminAccountEdit ? (
-                          <button
-                            className="border border-red-600 bg-blue-300 w-full"
-                            onClick={() => setAdminAccountEdit(true)}
-                          >
-                            Edit
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              className="border border-red-600 bg-blue-300 w-full"
-                              onClick={() => {
-                                setAdminAccountEdit(false);
-                                setChangePasswordFlag(false);
-                              }}
-                            >
-                              Close
-                            </button>
-                          </>
-                        )}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-center">
-                    <td>{adminDetails._id}</td>
-                    <td>{adminDetails.email}</td>
-                    <td>{adminDetails.phoneNo}</td>
-                    <td>{adminDetails.gender}</td>
-                    <td>{adminDetails.address}</td>
-                  </tbody>
-                </table>
-              </>
-            )}
-          </div>
-          <div></div>
+      {loading ? (
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
         </div>
       ) : (
-        <>Loading...</>
-      )}
-      {deleteAccountFlag && (
         <>
-          <div className="w-100 flex flex-col items-center mt-5">
-            <h1>Are you sure you want to delete your account?</h1>
-            <form onSubmit={deleteAccount}>
-              <input
-                type="password"
-                id="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Enter your password to delete the account"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                required
-              ></input>
-              <div className="flex gap-2 mt-2">
-                <button className="border border-red-300 p-1" type="submit">
-                  {deleteLoading ? "Deleting..." : "Delete"}
-                </button>
-                <button
-                  className="border border-red-300 p-1"
-                  onClick={() => setDeleteAccountFlag(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
-
-      {changePasswordFlag ? (
-        <>
-          <div className="flex w-full mt-5"></div>
-          <h1 className="text-center">Change password</h1>
-          <form onSubmit={updateNewPassword}>
-            <div className="mb-4 w-[50%] mx-auto mt-5">
-              <input
-                type="password"
-                id="currentpassword"
-                placeholder="Enter your current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div className="mb-4 w-[50%] mx-auto mt-5">
-              <input
-                type="password"
-                id="newpassword"
-                placeholder="Enter a new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div className="mb-4 w-[50%] mx-auto mt-5">
-              <input
-                type="password"
-                id="confirmpassword"
-                placeholder="Re-enter the new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div className="flex gap-2 justify-center">
-              <button type="submit" className="border border-green-600 p-1">
-                {updatePasswordLoading ? "updating..." : "update"}
-              </button>
+          <div className="m-4">
+            <div className="flex justify-between items-center">
+              <h1>{adminDetails.username}</h1>
               <button
-                onClick={() => {
-                  setChangePasswordFlag(false);
-                  setAdminAccountEdit(false);
-                }}
-                className="border border-red-600 p-1"
+                className="w-32 bg-red-800 text-white font-semibold py-2 rounded-md hover:bg-red-600 transition duration-200"
+                onClick={() => setDeleteAccountFlag(true)}
               >
-                Close
+                Delete Account
               </button>
             </div>
-          </form>
-        </>
-      ) : (
-        <>
-          {adminAccountEdit && (
-            <div className="mb-4 w-full p-2 flex justify-center mt-5">
-              <div className="w-[50%]">
-                <form onSubmit={updateAdminDetails}>
-                  <div className="mb-4">
-                    <label
-                      className="block text-sm font-medium text-gray-700"
-                      htmlFor="username"
+            <div className="mt-5 pl-5 flex flex-col">
+              {adminDetails ? (
+                <div className="h-[60vh] flex flex-col justify-between">
+                  <h2>Account Id: {adminDetails._id}</h2>
+                  <h2>Email: {adminDetails.email}</h2>
+                  <h2>Phone No: {adminDetails.phoneNo}</h2>
+                  <h2>Gender: {adminDetails.gender}</h2>
+                  <h2>Age: {adminDetails.age}</h2>
+                  <h2>
+                    Account Created At: {adminDetails.createdAtLocaleTime}
+                  </h2>
+                  {!adminDetails.updatedAtLocaleTime ? (
+                    <></>
+                  ) : (
+                    <h2>
+                      Account Updated At: {adminDetails.updatedAtLocaleTime}
+                    </h2>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <h1>No Details!</h1>
+                </div>
+              )}
+              {editAccountFlag ? (
+                <>
+                  <button
+                    className="mt-5 w-32 bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 transition duration-200"
+                    onClick={() => setEditAccountFlag(false)}
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="mt-5 w-32 bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 transition duration-200"
+                    onClick={() => setEditAccountFlag(true)}
+                  >
+                    Edit Account
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {deleteAccountFlag && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h1 className="text-lg font-semibold mb-4">
+                  Are you sure you want to delete your account?
+                </h1>
+                <form onSubmit={deleteAccount}>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Enter your password to confirm:
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                    required
+                  />
+                  <div className="mt-4 flex justify-end space-x-4">
+                    <button
+                      type="button" // Use type="button" to prevent form submission
+                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                      onClick={() => setDeleteAccountFlag(false)}
                     >
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      id="username"
-                      value={username}
-                      onChange={(e) => setUserName(e.target.value)}
-                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      className="block text-sm font-medium text-gray-700"
-                      htmlFor="email"
-                    >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      className="block text-sm font-medium text-gray-700"
-                      htmlFor="phoneNo"
-                    >
-                      Phone No
-                    </label>
-                    <input
-                      type="text"
-                      id="phoneNo"
-                      value={phoneNo}
-                      onChange={(e) => setPhoneNo(e.target.value)}
-                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Gender
-                    </label>
-                    <div className="mt-1">
-                      <label className="inline-flex items-center mr-4">
-                        <input
-                          type="radio"
-                          value="male"
-                          checked={gender === "male"}
-                          onChange={(e) => setGender(e.target.value)}
-                          className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                          required
-                        />
-                        <span className="ml-2">Male</span>
-                      </label>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value="female"
-                          checked={gender === "female"}
-                          onChange={(e) => setGender(e.target.value)}
-                          className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-                          required
-                        />
-                        <span className="ml-2">Female</span>
-                      </label>
-                      {/* Add more options as needed */}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        className="block text-sm font-medium text-gray-700"
-                        htmlFor="address"
-                      >
-                        Phone No
-                      </label>
-                      <input
-                        type="text"
-                        id="address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <button
-                        className="border border-blue-300 p-1"
-                        onClick={() => setChangePasswordFlag(true)}
-                      >
-                        Change password
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button type="submit" className="border border-red-300 p-1">
-                      {updateLoading ? "saving..." : "save"}
+                      Cancel
                     </button>
                     <button
-                      className="border border-red-300 p1"
-                      onClick={resetForm}
+                      type="submit"
+                      className="bg-red-800 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-red-300"
+                      disabled={!password} // Disable the button if password is empty
                     >
-                      Clear all
+                      Delete
                     </button>
                   </div>
                 </form>

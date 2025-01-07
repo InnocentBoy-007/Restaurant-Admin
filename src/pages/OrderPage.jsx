@@ -54,7 +54,7 @@ export default function OrderPage() {
 
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/details`,
+        `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
         {
           headers: { Authorization: `Bearer ${newToken || token}` },
           withCredentials: true,

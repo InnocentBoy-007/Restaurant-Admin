@@ -1,7 +1,7 @@
 import axios from "axios";
 
 class SecondaryActions {
-    async deleteAccount(data, token) {
+    async DeleteAccount(data, token) {
         if (!data || typeof data !== 'object') return 'Data is undefined or null or is not an object!';
         if (!token || typeof token !== 'string') return 'Token is undefined or null or is not a string!'
         const URL = `${import.meta.env.VITE_BACKEND_API}/account/details/delete`;
@@ -24,7 +24,7 @@ class SecondaryActions {
         }
     }
 
-    async updateAccount(data, token) {
+    async UpdateAccount(data, token) {
         if (!data || typeof data !== 'object') return 'Data is undefined or null or is not an object!';
         if (!token || typeof token !== 'string') return 'Token is undefined or null or is not a string!';
 
