@@ -50,18 +50,17 @@ class ForgotPassword {
     async changePassword(data, token) {
         if (!data || typeof data !== 'object') return alert("Invalid data or data is not an object!");
         if (!token || typeof token !== 'string') return alert("Invalid token or token is not a string!");
+
         const URL = `${import.meta.env.VITE_BACKEND_API}/v1/admin/password/forgot-password/change-password`;
 
         try {
             const response = await axios.patch(URL, data, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
 
-            return true;
+            return { success: true };
         } catch (error) {
             console.error(error);
             if (error.response) alert(error.response.data.message);
-
-            return false;
         }
     }
 }
