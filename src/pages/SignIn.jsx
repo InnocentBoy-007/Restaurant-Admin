@@ -11,6 +11,7 @@ export default function SignIn() {
 
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -22,6 +23,7 @@ export default function SignIn() {
 
   const resetForm = () => {
     setEmail("");
+    setUsername("");
     setPassword("");
     setLoading(false);
   };
@@ -34,6 +36,7 @@ export default function SignIn() {
     const data = {
       adminDetails: {
         email,
+        username,
         password,
       },
     };
@@ -217,15 +220,23 @@ export default function SignIn() {
                       <div className="mb-4">
                         <label
                           className="block text-sm font-medium text-gray-700"
-                          htmlFor="email"
+                          htmlFor="emailorusername"
                         >
-                          Email
+                          Email or Username
                         </label>
                         <input
-                          type="email"
-                          id="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          type="text"
+                          id="emailorusername"
+                          value={email || username}
+                          onChange={(e) => {
+                            if (e.target.value.includes("@")) {
+                                setEmail(e.target.value);
+                                setUsername("");
+                            } else {
+                                setUsername(e.target.value);
+                                setEmail("");
+                            }
+                          }}
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                           required
                         />
