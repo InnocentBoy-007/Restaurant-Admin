@@ -21,10 +21,12 @@ export default function PersonalDetails() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
 
   const [deleteAccountFlag, setDeleteAccountFlag] = useState(false);
   const [editAccountFlag, setEditAccountFlag] = useState(false);
   const [editPasswordFlag, setEditPasswordFlag] = useState(false);
+  const [otpFlag, setOtpFlag] = useState(false);
 
   const fetchAdminDetails = async () => {
     setLoading(true);
@@ -89,7 +91,10 @@ export default function PersonalDetails() {
       };
 
       try {
-        await secondaryActions.UpdateAccount(data, token);
+        const response = await secondaryActions.UpdateAccount(data, token);
+        if (response.otp) {
+            setOtpFlag(true);
+        }
         setEditAccountFlag(false);
         setInitialAdminDetails(adminDetails); // Update initial state after saving
       } finally {
@@ -98,6 +103,24 @@ export default function PersonalDetails() {
     },
     [adminDetails, token, setLoading, setEditAccountFlag]
   );
+
+  const confirmOTP = async(e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+        const response = await secondaryActions.ConfirmOTP({otp}, token);
+        if(response.success) {
+            setOtp("");
+            setLoading(false);
+            setOtpFlag(false);
+        }
+    } catch (error) {
+        setOtp("");
+        setLoading(false);
+        setOtpFlag(false);
+    }
+  }
 
   // function to changePassword
   const changePassword = async (e) => {
@@ -173,7 +196,18 @@ export default function PersonalDetails() {
         </div>
       ) : (
         <>
-          <div className="m-4">
+        {otpFlag ? <div className="flex justify-between items-center">
+            <h1>OTP</h1>
+            <form onSubmit={confirmOTP}>
+                <input type="text"
+                id="otp"
+                placeholder="Enter your OTP here.."
+                value={otp}
+                onChange={(e)=>setOtp(e.target.value)}/>
+                <button type="submit">{loading?'confirming...':'confirm'}</button>
+            </form>
+        </div>:<div>
+            <div className="m-4">
             <div className="flex justify-between items-center">
               <h1>{adminDetails.username}</h1>
               <button
@@ -439,6 +473,8 @@ export default function PersonalDetails() {
               </div>
             </div>
           )}
+                </div>}
+
         </>
       )}
     </>

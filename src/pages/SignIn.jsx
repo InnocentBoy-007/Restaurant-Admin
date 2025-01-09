@@ -48,6 +48,7 @@ export default function SignIn() {
       }
     } catch (error) {
       // keep the email as it is
+      setLoading(false);
       setPassword("");
     }
   };
