@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import primaryActions from "../services/PrimaryActions";
 
-export default function Homepage() {
+export default function SignUp() {
   const [laoding, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -202,7 +202,7 @@ export default function Homepage() {
               Already have an account?{" "}
               <span
                 className="font-bold cursor-pointer"
-                onClick={() => navigate("/admin/signIn")}
+                onClick={() => navigate("/")}
               >
                 Sign In
               </span>

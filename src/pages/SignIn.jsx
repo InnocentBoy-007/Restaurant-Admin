@@ -11,7 +11,7 @@ export default function SignIn() {
 
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [phoneNo, setPhoneNo] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -23,7 +23,7 @@ export default function SignIn() {
 
   const resetForm = () => {
     setEmail("");
-    setUsername("");
+    setPhoneNo("");
     setPassword("");
     setLoading(false);
   };
@@ -36,7 +36,7 @@ export default function SignIn() {
     const data = {
       adminDetails: {
         email,
-        username,
+        phoneNo,
         password,
       },
     };
@@ -222,18 +222,18 @@ export default function SignIn() {
                           className="block text-sm font-medium text-gray-700"
                           htmlFor="emailorusername"
                         >
-                          Email or Username
+                          Email or Phone
                         </label>
                         <input
                           type="text"
-                          id="emailorusername"
-                          value={email || username}
+                          id="emailorphone"
+                          value={email || phoneNo}
                           onChange={(e) => {
                             if (e.target.value.includes("@")) {
                                 setEmail(e.target.value);
-                                setUsername("");
+                                setPhoneNo("");
                             } else {
-                                setUsername(e.target.value);
+                                setPhoneNo(e.target.value);
                                 setEmail("");
                             }
                           }}
@@ -282,7 +282,7 @@ export default function SignIn() {
               Don't have an account?{" "}
               <span
                 className="font-bold cursor-pointer"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/admin/signup")}
               >
                 Sign Up
               </span>
