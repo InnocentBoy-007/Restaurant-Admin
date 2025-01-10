@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import ProductController from "../../components/ProductController";
+import productController from "../../components/ProductController";
 
 /**
  *  for adding a mechanism to retrieve a new token using a refresh token, please refer to order page (order.jsx)
@@ -11,6 +11,7 @@ import ProductController from "../../components/ProductController";
 export default function Products() {
   const navigate = useNavigate();
   const token = Cookies.get("adminToken");
+  //   const refreshToken = Cookies.get("adminRefreshToken"); // add later
 
   const [productDetails, setProductDetails] = useState([]);
   const [noProductsMessage, setNoProductsMessage] = useState("");
@@ -64,12 +65,15 @@ export default function Products() {
       },
     };
     try {
-      await ProductController.addProduct(body);
-      clearUpInputFields();
-      await fetchProducts(); // update the frontend after successfully adding a new product
-      setAddNewProductLoading(false);
-      setAddNewProductFlag(false);
+      const response = await productController.addProduct(body, token);
+      if (response.success) {
+        clearUpInputFields();
+        await fetchProducts(); // update the frontend after successfully adding a new product
+        setAddNewProductLoading(false);
+        setAddNewProductFlag(false);
+      }
     } catch (error) {
+      clearUpInputFields();
       setAddNewProductLoading(false);
     }
   };
@@ -78,12 +82,15 @@ export default function Products() {
     e.preventDefault();
     setDeleteProductLoading(true);
     try {
-      await ProductController.deleteProduct(productId);
-      setProductId("");
-      await fetchProducts();
-      setDeleteProductLoading(false);
-      setProductDeleteFlag(false);
+      const response = await productController.deleteProduct(productId, token);
+      if (response.success) {
+        setProductId("");
+        await fetchProducts();
+        setDeleteProductLoading(false);
+        setProductDeleteFlag(false);
+      }
     } catch (error) {
+      setProductId("");
       setDeleteProductLoading(false);
     }
   };
@@ -91,33 +98,25 @@ export default function Products() {
   const editProduct = async (e) => {
     e.preventDefault();
     setEditProductLoading(true);
-    const endpoint = `${import.meta.env.VITE_BACKEND_API}/products/update`;
     const data = {
-      productDetails: {
+      newDetails: {
         productName,
         productPrice: parseInt(productPrice),
         productQuantity: parseInt(productQuantity),
       },
     };
     try {
-      const response = await axios.patch(`${endpoint}/${productId}`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-      alert(response.data.message);
-      fetchProducts();
-      clearUpInputFields();
-      setProductEditFlag(false);
-    } catch (error) {
-      setEditProductLoading(false);
-      console.error(error);
-      if (error.response) {
-        console.log(error.response.data.message);
+      const response = await productController.updateProduct(
+        productId,
+        data,
+        token
+      );
+      if (response.success) {
+        fetchProducts();
+        setProductEditFlag(false);
       }
     } finally {
+      clearUpInputFields();
       setEditProductLoading(false);
     }
   };
@@ -280,7 +279,7 @@ export default function Products() {
                             <td>
                               {!item.productUpdatedOn
                                 ? "null"
-                                : `${item.productAddedOn}`}
+                                : `${item.productUpdatedOn}`}
                             </td>
                             <td>
                               {!item.productUpdatedBy

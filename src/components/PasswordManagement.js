@@ -41,7 +41,13 @@ class ForgotPassword {
             return true;
         } catch (error) {
             console.error(error);
-            if (error.response) alert(error.response.data.message);
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if(error.request) {
+                alert("Network error! PLease try again later!");
+            } else {
+                alert("An unexpected error occured while trying to confirm the OTP!");
+            }
 
             return false;
         }
@@ -60,7 +66,13 @@ class ForgotPassword {
             return { success: true };
         } catch (error) {
             console.error(error);
-            if (error.response) alert(error.response.data.message);
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if(error.request) {
+                alert("Network error! Please try again later!");
+            } else {
+                alert("An unexpected error occured while trying to change the password!");
+            }
         }
     }
 }
