@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import productController from "../../components/ProductController";
+import { jwtDecode } from "jwt-decode";
+import { isTokenExpired } from "../../components/IsTokenExpired";
+import { RefreshToken } from "../../components/RefreshToken";
 
 /**
  *  for adding a mechanism to retrieve a new token using a refresh token, please refer to order page (order.jsx)
@@ -10,8 +13,10 @@ import productController from "../../components/ProductController";
 
 export default function Products() {
   const navigate = useNavigate();
-  const token = Cookies.get("adminToken");
-  //   const refreshToken = Cookies.get("adminRefreshToken"); // add later
+  let token = Cookies.get("adminToken");
+  const refreshToken = Cookies.get("adminRefreshToken"); // add later
+  const decodedToken = jwtDecode(refreshToken);
+  const adminId = decodedToken.adminId;
 
   const [productDetails, setProductDetails] = useState([]);
   const [noProductsMessage, setNoProductsMessage] = useState("");
@@ -29,13 +34,21 @@ export default function Products() {
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productQuantity, setProductQuantity] = useState("");
+
   const clearUpInputFields = () => {
     setProductName("");
     setProductPrice("");
     setProductQuantity("");
   };
 
+  const checkToken = async () => {
+    if (!token || isTokenExpired(token)) {
+      token = await RefreshToken(refreshToken, adminId);
+    }
+  };
+
   const fetchProducts = async () => {
+    await checkToken();
     setFetchProductLoading(true);
     const endpoint = import.meta.env.VITE_BACKEND_API2;
     try {
@@ -50,11 +63,8 @@ export default function Products() {
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const addNewproducts = async (e) => {
+    await checkToken();
     e.preventDefault();
     setAddNewProductLoading(true);
     const body = {
@@ -79,6 +89,7 @@ export default function Products() {
   };
 
   const deleteProduct = async (e, productId) => {
+    await checkToken();
     e.preventDefault();
     setDeleteProductLoading(true);
     try {
@@ -96,6 +107,7 @@ export default function Products() {
   };
 
   const editProduct = async (e) => {
+    await checkToken();
     e.preventDefault();
     setEditProductLoading(true);
     const data = {
@@ -129,6 +141,10 @@ export default function Products() {
       return addNewproducts(e);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   return (
     <>
