@@ -10,7 +10,7 @@ export const RefreshToken = async (refreshToken, adminId) => {
     try {
         const response = await axios.post(URL, {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshToken}` }, withCredentials: true });
         const { token } = response.data;
-        Cookies.set("adminToken", token);
+
         return token;
     } catch (error) {
         console.error(error);

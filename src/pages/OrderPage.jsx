@@ -12,7 +12,6 @@ export default function OrderPage() {
 
   let token = Cookies.get("adminToken");
   const refreshToken = Cookies.get("adminRefreshToken");
-
   const decodedToken = jwtDecode(refreshToken);
   const adminId = decodedToken.adminId;
 
@@ -27,10 +26,15 @@ export default function OrderPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutFlag, setLogoutFlag] = useState(false);
 
-  const fetchAdminDetails = async () => {
+  const checkToken = async () => {
     if (!token || isTokenExpired(token)) {
       token = await RefreshToken(refreshToken, adminId);
     }
+  };
+
+  const fetchAdminDetails = async () => {
+    await checkToken();
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
@@ -50,10 +54,8 @@ export default function OrderPage() {
 
   // this function inclues the mechanism for retrieving a new token using refresh token
   const fetchOrderDetails = async () => {
+    await checkToken();
     setLoading(true);
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
-    }
 
     try {
       const response = await axios.get(
@@ -80,6 +82,7 @@ export default function OrderPage() {
 
   // function to accept order
   const acceptOrder = async (e, orderId) => {
+    await checkToken();
     e.preventDefault();
     setAcceptLoading(true);
 
@@ -96,6 +99,7 @@ export default function OrderPage() {
 
   // function to reject order
   const rejectOrder = async (e, orderId) => {
+    await checkToken();
     e.preventDefault();
     setRejectLoading(true);
 
@@ -111,6 +115,7 @@ export default function OrderPage() {
   };
 
   const logOut = async (e) => {
+    await checkToken();
     e.preventDefault();
     setLogoutLoading(true);
     try {
@@ -152,7 +157,7 @@ export default function OrderPage() {
         {adminName ? <h1>Welcome {adminName} to the admin panel</h1> : <></>}
         <div className="flex justify-between w-full p-2">
           <button
-            className="border border-blue-600 p-1"
+            className=" border border-blue-600 p-1"
             onClick={() => navigate("/admin/profile")}
           >
             Profile
