@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { isTokenExpired } from "../components/IsTokenExpired";
+import { RefreshToken } from "../components/RefreshToken";
 
 // test passed
 export const OtpVerify = () => {
@@ -12,7 +15,15 @@ export const OtpVerify = () => {
   const confirmOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const token = Cookies.get("adminToken");
+    let token = Cookies.get("adminToken");
+    const refreshToken = Cookies.get("adminRefreshToken");
+    const decodedToken = jwtDecode(refreshToken);
+    const adminId = decodedToken.adminId;
+
+    if (!token || isTokenExpired(token)) {
+      token = await RefreshToken(refreshToken, adminId);
+    }
+
     const URL = `${import.meta.env.VITE_BACKEND_API}/account/signup/verifyOTP`;
     const body = {
       otp: OTP,

@@ -2,8 +2,8 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import productController from "../../components/ProductController";
 import { jwtDecode } from "jwt-decode";
+import productController from "../../components/ProductController";
 import { isTokenExpired } from "../../components/IsTokenExpired";
 import { RefreshToken } from "../../components/RefreshToken";
 
@@ -14,7 +14,7 @@ import { RefreshToken } from "../../components/RefreshToken";
 export default function Products() {
   const navigate = useNavigate();
   let token = Cookies.get("adminToken");
-  const refreshToken = Cookies.get("adminRefreshToken"); // add later
+  const refreshToken = Cookies.get("adminRefreshToken");
   const decodedToken = jwtDecode(refreshToken);
   const adminId = decodedToken.adminId;
 
@@ -48,11 +48,14 @@ export default function Products() {
   };
 
   const fetchProducts = async () => {
-    await checkToken();
+    if (!token || isTokenExpired(token)) {
+      token = await RefreshToken(refreshToken, adminId);
+    }
     setFetchProductLoading(true);
-    const endpoint = import.meta.env.VITE_BACKEND_API2;
+    const URL = import.meta.env.VITE_BACKEND_API2;
+
     try {
-      const response = await axios.get(`${endpoint}/product/details`);
+      const response = await axios.get(`${URL}/product/details`);
       setProductDetails(response.data.products);
     } catch (error) {
       if (error.response) {
@@ -64,7 +67,9 @@ export default function Products() {
   };
 
   const addNewproducts = async (e) => {
-    await checkToken();
+    if (!token || isTokenExpired(token)) {
+      token = await RefreshToken(refreshToken, adminId);
+    }
     e.preventDefault();
     setAddNewProductLoading(true);
     const body = {
@@ -74,6 +79,7 @@ export default function Products() {
         productQuantity: parseInt(productQuantity),
       },
     };
+
     try {
       const response = await productController.addProduct(body, token);
       if (response.success) {
@@ -89,9 +95,12 @@ export default function Products() {
   };
 
   const deleteProduct = async (e, productId) => {
-    await checkToken();
+    if (!token || isTokenExpired(token)) {
+      token = RefreshToken(refreshToken, adminId);
+    }
     e.preventDefault();
     setDeleteProductLoading(true);
+
     try {
       const response = await productController.deleteProduct(productId, token);
       if (response.success) {
@@ -107,7 +116,9 @@ export default function Products() {
   };
 
   const editProduct = async (e) => {
-    await checkToken();
+    if (!token || isTokenExpired(token)) {
+      token = RefreshToken(refreshToken, adminId);
+    }
     e.preventDefault();
     setEditProductLoading(true);
     const data = {
@@ -117,6 +128,7 @@ export default function Products() {
         productQuantity: parseInt(productQuantity),
       },
     };
+
     try {
       const response = await productController.updateProduct(
         productId,
@@ -144,7 +156,7 @@ export default function Products() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [token]);
 
   return (
     <>

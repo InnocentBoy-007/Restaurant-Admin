@@ -2,20 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
-import refreshAccessToken from "./RefreshToken";
 import { jwtDecode } from "jwt-decode";
 import services from "../services/Service";
+import { isTokenExpired } from "../components/IsTokenExpired";
+import { RefreshToken } from "../components/RefreshToken";
 
 export default function OrderPage() {
   const navigate = useNavigate();
 
-  const token = Cookies.get("adminToken");
-  // const refreshtToken = Cookies.get("adminRefreshToken"); // add later
-  const decodedToken = jwtDecode(token);
+  let token = Cookies.get("adminToken");
+  const refreshToken = Cookies.get("adminRefreshToken");
+  const decodedToken = jwtDecode(refreshToken);
+  const adminId = decodedToken.adminId;
 
-  if (!token) {
-    navigate("/");
-  }
   const [orderDetails, setOrderDetails] = useState([]);
 
   const [adminName, setAdminName] = useState("");
@@ -27,36 +26,20 @@ export default function OrderPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutFlag, setLogoutFlag] = useState(false);
 
-  const refreshToken = Cookies.get("adminRefreshToken");
-  const adminId = decodedToken.adminId;
+  const checkToken = async () => {
+    if (!token || isTokenExpired(token)) {
+      token = await RefreshToken(refreshToken, adminId);
+    }
+  };
 
-  // this function includes the mechanism for retrieving a new token using refresh token
   const fetchAdminDetails = async () => {
-    let isRefreshing = false; // Flag to prevent multiple refresh calls
-    // I think, I don't need to store the new token in a variable since the cookies will be updated automatically from the refreshtoken section
-    let newToken = null; // Store the new token if refreshed
-
-    const backupFunction = async () => {
-      if (!isRefreshing) {
-        isRefreshing = true; // Set the flag to true
-        try {
-          const response = await refreshAccessToken(refreshToken, adminId);
-          newToken = response.output; // Store the new token
-        } catch (error) {
-          console.error("Failed to refresh token:", error);
-          // Handle refresh token failure (e.g., log out user)
-        } finally {
-          isRefreshing = false; // Reset the flag
-        }
-      }
-      return fetchAdminDetails(); // Retry fetching admin details
-    };
+    await checkToken();
 
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
         {
-          headers: { Authorization: `Bearer ${newToken || token}` },
+          headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         }
       );
@@ -64,48 +47,22 @@ export default function OrderPage() {
     } catch (error) {
       console.log(error);
       if (error.response) {
-        if (error.response.data.message === "Token expired! - backend") {
-          await backupFunction(); // Call backup function if token expired
-        } else {
-          alert(error.response.data.message);
-        }
-      } else {
-        await backupFunction(); // Call backup function for other errors
+        console.log(error.response.data.message);
       }
     }
   };
 
   // this function inclues the mechanism for retrieving a new token using refresh token
   const fetchOrderDetails = async () => {
+    await checkToken();
     setLoading(true);
-    let isRefreshing = false;
-    let newToken = null;
-
-    const backupFunction = async () => {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const { output } = await refreshAccessToken(
-            refreshToken,
-            adminId,
-            refreshToken_URL
-          );
-          newToken = output;
-        } catch (error) {
-          console.error(error);
-        } finally {
-          isRefreshing = false; // Reset the flag
-        }
-      }
-      return fetchOrderDetails();
-    };
 
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_API}/v1/admin/orders/fetch_orders`,
         {
           headers: {
-            Authorization: `Bearer ${token || newToken}`,
+            Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         }
@@ -118,19 +75,14 @@ export default function OrderPage() {
       console.log("Error-->", error);
 
       if (error.response) {
-        if (error.response.data.message === "Token expired! - backend") {
-          await backupFunction();
-        } else {
-          alert(error.response.data.message);
-        }
-      } else {
-        await backupFunction();
+        console.log(error.response.data.message);
       }
     }
   };
 
   // function to accept order
   const acceptOrder = async (e, orderId) => {
+    await checkToken();
     e.preventDefault();
     setAcceptLoading(true);
 
@@ -147,6 +99,7 @@ export default function OrderPage() {
 
   // function to reject order
   const rejectOrder = async (e, orderId) => {
+    await checkToken();
     e.preventDefault();
     setRejectLoading(true);
 
@@ -162,6 +115,7 @@ export default function OrderPage() {
   };
 
   const logOut = async (e) => {
+    await checkToken();
     e.preventDefault();
     setLogoutLoading(true);
     try {
@@ -184,12 +138,7 @@ export default function OrderPage() {
       navigate("/");
       setLogoutLoading(false);
       if (error.response) {
-        const newToken = await refreshAccessToken(token, adminId); // this function sends the refresh token to fetch a new primary token
-        if (newToken) {
-          return logOut(e);
-        } else {
-          console.log(error);
-        }
+        console.log(error.response.data.message);
       }
     } finally {
       setLogoutLoading(false);
@@ -208,7 +157,7 @@ export default function OrderPage() {
         {adminName ? <h1>Welcome {adminName} to the admin panel</h1> : <></>}
         <div className="flex justify-between w-full p-2">
           <button
-            className="border border-blue-600 p-1"
+            className=" border border-blue-600 p-1"
             onClick={() => navigate("/admin/profile")}
           >
             Profile
