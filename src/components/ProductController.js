@@ -23,7 +23,7 @@ class ProductController {
     async updateProduct(productId, data, token) {
         const URL = `${import.meta.env.VITE_BACKEND_API}/v1/admin/products/update_product/${productId}`;
         try {
-            const response = await axios.patch(URL, data, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, withCredentials: true });
+            const response = await axios.patch(URL, data, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
 
             return { success: true };

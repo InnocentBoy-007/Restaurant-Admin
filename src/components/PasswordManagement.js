@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 
 class ForgotPassword {
     async requestOTP(data) { // get an OTP using email
@@ -11,10 +10,7 @@ class ForgotPassword {
             const { token, refreshToken, message } = response.data;
             alert(message);
 
-            Cookies.set("adminToken", token);
-            Cookies.set("adminRefreshToken", refreshToken);
-
-            return true;
+            return { success: true, token, refreshToken };
         } catch (error) {
             console.error(error);
             if (error.response) {
@@ -24,8 +20,6 @@ class ForgotPassword {
             } else {
                 alert("An unexpected error occured while trying to request an OTP!");
             }
-
-            return false;
         }
     }
 
@@ -38,18 +32,16 @@ class ForgotPassword {
             const response = await axios.post(URL, data, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
 
-            return true;
+            return { sucess: true };
         } catch (error) {
             console.error(error);
             if (error.response) {
                 alert(error.response.data.message);
-            } else if(error.request) {
+            } else if (error.request) {
                 alert("Network error! PLease try again later!");
             } else {
                 alert("An unexpected error occured while trying to confirm the OTP!");
             }
-
-            return false;
         }
     }
 
@@ -68,7 +60,7 @@ class ForgotPassword {
             console.error(error);
             if (error.response) {
                 alert(error.response.data.message);
-            } else if(error.request) {
+            } else if (error.request) {
                 alert("Network error! Please try again later!");
             } else {
                 alert("An unexpected error occured while trying to change the password!");

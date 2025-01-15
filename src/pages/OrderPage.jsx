@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import fetchDetails from "../components/FetchDetails";
 import services from "../services/Service";
 import { isTokenExpired } from "../components/IsTokenExpired";
 import { RefreshToken } from "../components/RefreshToken";
@@ -10,14 +11,12 @@ import { RefreshToken } from "../components/RefreshToken";
 export default function OrderPage() {
   const navigate = useNavigate();
 
-  let token = Cookies.get("adminToken");
+  let [token, setToken] = useState(Cookies.get("adminToken"));
   const refreshToken = Cookies.get("adminRefreshToken");
-  const decodedToken = jwtDecode(refreshToken);
-  const adminId = decodedToken.adminId;
+  const [adminId, setAdminId] = useState("");
+  const [adminName, setAdminName] = useState("");
 
   const [orderDetails, setOrderDetails] = useState([]);
-
-  const [adminName, setAdminName] = useState("");
 
   // reduce the loadings to only a single loading
   const [loading, setLoading] = useState(false);
@@ -32,29 +31,19 @@ export default function OrderPage() {
     }
   };
 
+  // function to fetch only admin name
   const fetchAdminDetails = async () => {
-    await checkToken();
-
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
-        }
+    const response = await fetchDetails.FetchAdminDetails(token);
+    if (response.success) {
+      setAdminName(response.adminDetails.username);
+    } else {
+      console.log(
+        "There is an error while trying to execute the fetch admin details function!"
       );
-      setAdminName(response.data.adminDetails.name);
-    } catch (error) {
-      console.log(error);
-      if (error.response) {
-        console.log(error.response.data.message);
-      }
     }
   };
 
-  // this function inclues the mechanism for retrieving a new token using refresh token
   const fetchOrderDetails = async () => {
-    await checkToken();
     setLoading(true);
 
     try {
@@ -82,7 +71,6 @@ export default function OrderPage() {
 
   // function to accept order
   const acceptOrder = async (e, orderId) => {
-    await checkToken();
     e.preventDefault();
     setAcceptLoading(true);
 
@@ -99,7 +87,6 @@ export default function OrderPage() {
 
   // function to reject order
   const rejectOrder = async (e, orderId) => {
-    await checkToken();
     e.preventDefault();
     setRejectLoading(true);
 
@@ -115,7 +102,6 @@ export default function OrderPage() {
   };
 
   const logOut = async (e) => {
-    await checkToken();
     e.preventDefault();
     setLogoutLoading(true);
     try {
@@ -146,9 +132,31 @@ export default function OrderPage() {
   };
 
   useEffect(() => {
-    fetchAdminDetails();
+    const checkToken = async () => {
+      try {
+        if (token || !isTokenExpired(token)) {
+          const decodedToken = jwtDecode(token);
+          setAdminId(decodedToken.adminId);
+        } else if (!token || isTokenExpired(token)) {
+          const decodedToken = jwtDecode(refreshToken);
+          setAdminId(decodedToken.adminId);
+          const newToken = await RefreshToken(refreshToken, adminId);
+          if (newToken.success) {
+            setToken(newToken.token);
+          } // else go to the catch section
+        }
+      } catch (error) {
+        // clear all the cookies before going to the signup page
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+        navigate("/"); // if everything goes wrong, go to the signup page
+      }
+    };
+
+    checkToken();
     fetchOrderDetails();
-  }, [token]); // Re-fetches data when the token changes
+    fetchAdminDetails();
+  }, [token, token, refreshToken, adminId, navigate]);
 
   return (
     <>

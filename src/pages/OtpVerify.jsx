@@ -37,7 +37,7 @@ export const OtpVerify = () => {
         },
         withCredentials: true,
       });
-      alert(`${response.data.message}\n${response.data.verification}`);
+      alert(`${response.data.message}`);
       setLoading(false);
       navigate("/admin/orders");
     } catch (error) {

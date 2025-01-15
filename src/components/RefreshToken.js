@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 export const RefreshToken = async (refreshToken, adminId) => {
-    if (!refreshToken || typeof refreshToken !== 'string') return alert("Token is either invalid nor string or is not found!");
+    if (!refreshToken || typeof refreshToken !== 'string') return console.log("Token is either invalid nor string or is not found!");
     const URL = `${import.meta.env.VITE_BACKEND_API}/v1/admin/token/refresh-token/${adminId}`;
 
     Cookies.remove("adminToken"); // remove the old token first
@@ -11,7 +11,7 @@ export const RefreshToken = async (refreshToken, adminId) => {
         const response = await axios.post(URL, {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshToken}` }, withCredentials: true });
         const { token } = response.data;
 
-        return token;
+        return { success: true, token };
     } catch (error) {
         console.error(error);
         if (error.response) {

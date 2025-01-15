@@ -1,15 +1,19 @@
 import React from "react";
 import Cookies from "js-cookie";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import primaryActions from "../services/PrimaryActions";
 import forgotPassword from "../components/PasswordManagement";
+import { jwtDecode } from "jwt-decode";
+import { isTokenExpired } from "../components/IsTokenExpired";
+import { RefreshToken } from "../components/RefreshToken";
 
 export default function SignIn() {
-  const token = Cookies.get("adminToken");
-  //   const refreshToken = Cookies.get("clientRefreshToken"); // add later
+  let [token, setToken] = useState(Cookies.get("adminToken"));
+  const refreshToken = Cookies.get("clientRefreshToken");
 
   const navigate = useNavigate();
+  const [adminId, setAdminId] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +24,32 @@ export default function SignIn() {
   const [forgotPasswordFlag, setForgotPasswordFlag] = useState(false);
   const [otpVerifyFlag, setOtpVerifyFlag] = useState(false);
   const [newPasswordFlag, setNewPasswordFlag] = useState(false);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        if (token && !isTokenExpired(token)) {
+          const decodedToken = jwtDecode(token);
+          setAdminId(decodedToken.adminId);
+          navigate("/admin/orders");
+        } else if (!token || isTokenExpired(token)) {
+          const newToken = await RefreshToken(refreshToken, adminId);
+          if (newToken.success) {
+            setToken(newToken.token);
+            const decodedToken = jwtDecode(newToken);
+            setAdminId(decodedToken.adminId);
+            navigate("/admin/orders");
+          }
+        }
+      } catch (error) {
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+        navigate("/");
+      }
+    };
+
+    checkToken();
+  }, [token, refreshToken, adminId, navigate]);
 
   const resetForm = () => {
     setEmail("");
@@ -63,14 +93,13 @@ export default function SignIn() {
 
     try {
       const response = await forgotPassword.requestOTP({ email });
-      if (!response) {
+      if (response.success) {
+        Cookies.set("adminToken", response.token);
+        Cookies.set("adminRefreshToken", response.refreshToken);
         setLoading(false);
         setEmail("");
-        return;
+        setOtpVerifyFlag(true);
       }
-      setLoading(false);
-      setEmail("");
-      setOtpVerifyFlag(true);
     } catch (error) {
       setEmail("");
       setLoading(false);
@@ -230,11 +259,11 @@ export default function SignIn() {
                           value={email || phoneNo}
                           onChange={(e) => {
                             if (e.target.value.includes("@")) {
-                                setEmail(e.target.value);
-                                setPhoneNo("");
+                              setEmail(e.target.value);
+                              setPhoneNo("");
                             } else {
-                                setPhoneNo(e.target.value);
-                                setEmail("");
+                              setPhoneNo(e.target.value);
+                              setEmail("");
                             }
                           }}
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
