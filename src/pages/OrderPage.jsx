@@ -25,17 +25,12 @@ export default function OrderPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutFlag, setLogoutFlag] = useState(false);
 
-  const checkToken = async () => {
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
-    }
-  };
-
   // function to fetch only admin name
   const fetchAdminDetails = async () => {
     const response = await fetchDetails.FetchAdminDetails(token);
     if (response.success) {
       setAdminName(response.adminDetails.username);
+      setAdminId(response.adminDetails._id);
     } else {
       console.log(
         "There is an error while trying to execute the fetch admin details function!"
@@ -134,16 +129,23 @@ export default function OrderPage() {
   useEffect(() => {
     const checkToken = async () => {
       try {
-        if (token || !isTokenExpired(token)) {
+        if (token && !isTokenExpired(token)) {
           const decodedToken = jwtDecode(token);
           setAdminId(decodedToken.adminId);
-        } else if (!token || isTokenExpired(token)) {
+        } else if (refreshToken && isTokenExpired(token)) {
           const decodedToken = jwtDecode(refreshToken);
           setAdminId(decodedToken.adminId);
-          const newToken = await RefreshToken(refreshToken, adminId);
+          const newToken = await RefreshToken(refreshToken, decodedToken.adminId);
           if (newToken.success) {
             setToken(newToken.token);
-          } // else go to the catch section
+            Cookies.set("adminToken", newToken.token);
+            const decodedToken = jwtDecode(newToken.token);
+            setAdminId(decodedToken.adminId);
+          } else {
+            Cookies.remove("adminToken");
+            Cookies.remove("adminRefreshToken");
+            navigate("/");
+          }
         }
       } catch (error) {
         // clear all the cookies before going to the signup page
@@ -154,9 +156,9 @@ export default function OrderPage() {
     };
 
     checkToken();
-    fetchOrderDetails();
     fetchAdminDetails();
-  }, [token, token, refreshToken, adminId, navigate]);
+    fetchOrderDetails();
+  }, [token, refreshToken]);
 
   return (
     <>

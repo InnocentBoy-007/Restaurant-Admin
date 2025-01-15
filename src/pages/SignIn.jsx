@@ -32,13 +32,22 @@ export default function SignIn() {
           const decodedToken = jwtDecode(token);
           setAdminId(decodedToken.adminId);
           navigate("/admin/orders");
-        } else if (!token || isTokenExpired(token)) {
-          const newToken = await RefreshToken(refreshToken, adminId);
+        } else if (refreshToken && isTokenExpired(token)) {
+          const decodedToken = jwtDecode(refreshToken);
+          setAdminId(decodedToken.adminId);
+          const newToken = await RefreshToken(
+            refreshToken,
+            decodedToken.adminId
+          );
           if (newToken.success) {
             setToken(newToken.token);
-            const decodedToken = jwtDecode(newToken);
+            Cookies.set("adminToken", newToken.token);
+            const decodedToken = jwtDecode(newToken.token);
             setAdminId(decodedToken.adminId);
             navigate("/admin/orders");
+          } else {
+            Cookies.remove("adminToken");
+            Cookies.remove("adminRefreshToken");
           }
         }
       } catch (error) {
@@ -49,7 +58,7 @@ export default function SignIn() {
     };
 
     checkToken();
-  }, [token, refreshToken, adminId, navigate]);
+  }, [token, refreshToken]);
 
   const resetForm = () => {
     setEmail("");

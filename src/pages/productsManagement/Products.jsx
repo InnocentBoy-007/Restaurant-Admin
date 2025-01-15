@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -6,17 +5,12 @@ import { jwtDecode } from "jwt-decode";
 import productController from "../../components/ProductController";
 import { isTokenExpired } from "../../components/IsTokenExpired";
 import { RefreshToken } from "../../components/RefreshToken";
-
-/**
- *  for adding a mechanism to retrieve a new token using a refresh token, please refer to order page (order.jsx)
- */
+import fetchDetails from "../../components/FetchDetails";
 
 export default function Products() {
   const navigate = useNavigate();
-  let token = Cookies.get("adminToken");
+  let [token, setToken] = useState(Cookies.get("adminToken"));
   const refreshToken = Cookies.get("adminRefreshToken");
-  const decodedToken = jwtDecode(refreshToken);
-  const adminId = decodedToken.adminId;
 
   const [productDetails, setProductDetails] = useState([]);
   const [noProductsMessage, setNoProductsMessage] = useState("");
@@ -41,35 +35,48 @@ export default function Products() {
     setProductQuantity("");
   };
 
-  const checkToken = async () => {
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
-    }
-  };
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        if (token && !isTokenExpired(token)) {
+          // do something if there is token
+        } else if (refreshToken && isTokenExpired(token)) {
+          const decodedToken = jwtDecode(refreshToken);
+          const newToken = await RefreshToken(
+            refreshToken,
+            decodedToken.adminId
+          );
+          if (newToken.success) {
+            setToken(newToken.token);
+            Cookies.set("adminToken", newToken.token);
+          } else {
+            Cookies.remove("adminToken");
+            Cookies.remove("adminRefreshToken");
+            navigate("/");
+          }
+        }
+      } catch (error) {
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+        navigate("/"); // if anything goes wrong return to the signin page (index page)
+      }
+    };
+    checkToken();
+    fetchProducts();
+  }, [token, refreshToken]);
 
   const fetchProducts = async () => {
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
-    }
     setFetchProductLoading(true);
-    const URL = import.meta.env.VITE_BACKEND_API2;
-
-    try {
-      const response = await axios.get(`${URL}/product/details`);
-      setProductDetails(response.data.products);
-    } catch (error) {
-      if (error.response) {
-        setNoProductsMessage(error.response.data.message);
-      }
-    } finally {
+    const response = await fetchDetails.FetchProductDetails();
+    if (response.success) {
+      setProductDetails(response.productDetails);
       setFetchProductLoading(false);
+    } else {
+      setNoProductsMessage(response.errorMessage);
     }
   };
 
   const addNewproducts = async (e) => {
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
-    }
     e.preventDefault();
     setAddNewProductLoading(true);
     const body = {
@@ -95,9 +102,6 @@ export default function Products() {
   };
 
   const deleteProduct = async (e, productId) => {
-    if (!token || isTokenExpired(token)) {
-      token = RefreshToken(refreshToken, adminId);
-    }
     e.preventDefault();
     setDeleteProductLoading(true);
 
@@ -116,9 +120,6 @@ export default function Products() {
   };
 
   const editProduct = async (e) => {
-    if (!token || isTokenExpired(token)) {
-      token = RefreshToken(refreshToken, adminId);
-    }
     e.preventDefault();
     setEditProductLoading(true);
     const data = {
@@ -153,10 +154,6 @@ export default function Products() {
       return addNewproducts(e);
     }
   };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [token]);
 
   return (
     <>
