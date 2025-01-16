@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import productController from "../../components/ProductController";
 import { isTokenExpired } from "../../components/IsTokenExpired";
 import { RefreshToken } from "../../components/RefreshToken";
@@ -35,38 +34,19 @@ export default function Products() {
     setProductQuantity("");
   };
 
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        if (token && !isTokenExpired(token)) {
-          // do something if there is token
-        } else if (refreshToken && isTokenExpired(token)) {
-          const decodedToken = jwtDecode(refreshToken);
-          const newToken = await RefreshToken(
-            refreshToken,
-            decodedToken.adminId
-          );
-          if (newToken.success) {
-            setToken(newToken.token);
-            Cookies.set("adminToken", newToken.token);
-          } else {
-            Cookies.remove("adminToken");
-            Cookies.remove("adminRefreshToken");
-            navigate("/");
-          }
-        }
-      } catch (error) {
-        Cookies.remove("adminToken");
-        Cookies.remove("adminRefreshToken");
-        navigate("/"); // if anything goes wrong return to the signin page (index page)
-      }
-    };
-    checkToken();
-    fetchProducts();
-  }, [token, refreshToken]);
+  // function to check if the token has already expired or not
+  // if the token is expired, fetch a new generated token from the backend
+  const checkToken = async () => {
+    if (refreshToken && isTokenExpired(token)) {
+      const newToken = await RefreshToken(refreshToken);
+      setToken(newToken.token);
+      Cookies.set("adminToken", newToken.token);
+    }
+  };
 
   const fetchProducts = async () => {
     setFetchProductLoading(true);
+    await checkToken();
     const response = await fetchDetails.FetchProductDetails();
     if (response.success) {
       setProductDetails(response.productDetails);
@@ -88,6 +68,7 @@ export default function Products() {
     };
 
     try {
+      await checkToken();
       const response = await productController.addProduct(body, token);
       if (response.success) {
         clearUpInputFields();
@@ -106,6 +87,7 @@ export default function Products() {
     setDeleteProductLoading(true);
 
     try {
+      await checkToken();
       const response = await productController.deleteProduct(productId, token);
       if (response.success) {
         setProductId("");
@@ -131,6 +113,7 @@ export default function Products() {
     };
 
     try {
+      await checkToken();
       const response = await productController.updateProduct(
         productId,
         data,
@@ -154,6 +137,10 @@ export default function Products() {
       return addNewproducts(e);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [token, refreshToken]);
 
   return (
     <>

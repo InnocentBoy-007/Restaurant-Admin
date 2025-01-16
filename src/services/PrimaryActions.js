@@ -54,9 +54,10 @@ class PrimaryActions {
 
         try {
             const response = await axios.delete(URL, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
-            Cookies.remove("adminToken");
-            Cookies.remove("adminRefreshToken");
-            alert(response.data.message);
+
+            const { message } = response.data;
+
+            return { message };
         } catch (error) {
             console.error(error);
             if (error.response) {

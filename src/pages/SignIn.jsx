@@ -13,7 +13,6 @@ export default function SignIn() {
   const refreshToken = Cookies.get("clientRefreshToken");
 
   const navigate = useNavigate();
-  const [adminId, setAdminId] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
   const [password, setPassword] = useState("");
@@ -25,40 +24,24 @@ export default function SignIn() {
   const [otpVerifyFlag, setOtpVerifyFlag] = useState(false);
   const [newPasswordFlag, setNewPasswordFlag] = useState(false);
 
-  useEffect(() => {
-    const checkToken = async () => {
-      try {
-        if (token && !isTokenExpired(token)) {
-          const decodedToken = jwtDecode(token);
-          setAdminId(decodedToken.adminId);
-          navigate("/admin/orders");
-        } else if (refreshToken && isTokenExpired(token)) {
-          const decodedToken = jwtDecode(refreshToken);
-          setAdminId(decodedToken.adminId);
-          const newToken = await RefreshToken(
-            refreshToken,
-            decodedToken.adminId
-          );
-          if (newToken.success) {
-            setToken(newToken.token);
-            Cookies.set("adminToken", newToken.token);
-            const decodedToken = jwtDecode(newToken.token);
-            setAdminId(decodedToken.adminId);
-            navigate("/admin/orders");
-          } else {
-            Cookies.remove("adminToken");
-            Cookies.remove("adminRefreshToken");
-          }
-        }
-      } catch (error) {
-        Cookies.remove("adminToken");
-        Cookies.remove("adminRefreshToken");
-        navigate("/");
+  const checkToken = async () => {
+    try {
+      if (token && !isTokenExpired(token)) {
+        const decodedToken = jwtDecode(token);
+        setAdminId(decodedToken.adminId);
+        navigate("/admin/orders");
+      } else if (refreshToken && isTokenExpired(token)) {
+        const newToken = await RefreshToken(refreshToken, decodedToken.adminId);
+        setToken(newToken.token);
+        Cookies.set("adminToken", newToken.token);
+        navigate("/admin/orders");
       }
-    };
-
-    checkToken();
-  }, [token, refreshToken]);
+    } catch (error) {
+      Cookies.remove("adminToken");
+      Cookies.remove("adminRefreshToken");
+      navigate("/");
+    }
+  };
 
   const resetForm = () => {
     setEmail("");
@@ -117,6 +100,7 @@ export default function SignIn() {
 
   // function to confirm otp
   const confirmOTP = async (e) => {
+    await checkToken();
     e.preventDefault();
     setLoading(true);
 
@@ -138,6 +122,7 @@ export default function SignIn() {
 
   // function to set new password
   const changePassword = async (e) => {
+    await checkToken();
     e.preventDefault();
     setLoading(true);
 

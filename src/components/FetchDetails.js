@@ -2,7 +2,9 @@ import axios from "axios"
 
 class FetchDetails {
     async FetchAdminDetails(token) {
+        if (!token || typeof token !== 'string') return console.log("Token is either invalid or is not a string!");
         const URL = `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`
+
         try {
             const response = await axios.get(URL, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
 

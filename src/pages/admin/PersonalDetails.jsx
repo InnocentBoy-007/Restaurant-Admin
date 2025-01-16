@@ -1,25 +1,24 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import secondaryActions from "../../services/SecondaryActions";
 import { RefreshToken } from "../../components/RefreshToken";
 import { isTokenExpired } from "../../components/IsTokenExpired";
+import fetchDetails from "../../components/FetchDetails";
 
 export default function PersonalDetails() {
   const navigate = useNavigate();
-  let token = Cookies.get("adminToken");
+  let [token, setToken] = useState(Cookies.get("adminToken"));
   const refreshToken = Cookies.get("adminRefreshToken");
-  const decodedToken = jwtDecode(refreshToken);
-  const adminId = decodedToken.adminId;
 
   const [adminDetails, setAdminDetails] = useState({});
   const [initialAdminDetails, setInitialAdminDetails] = useState({}); // Store initial state
 
   const [loading, setLoading] = useState(false);
 
-  const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
 
@@ -29,44 +28,31 @@ export default function PersonalDetails() {
   const [otpFlag, setOtpFlag] = useState(false);
 
   const checkToken = async () => {
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
+    if (refreshToken && isTokenExpired(token)) {
+      const newToken = await RefreshToken(refreshToken);
+      Cookies.set("adminToken", newToken.token);
+      setToken(newToken.token);
     }
   };
 
   const fetchAdminDetails = async () => {
-    await checkToken();
     setLoading(true);
-
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/v1/admin/user-details`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
+    await checkToken();
+    const response = await fetchDetails.FetchAdminDetails(token);
+    if (response.success) {
       setLoading(false);
-      setAdminDetails(response.data.adminDetails);
-      setInitialAdminDetails(response.data.adminDetails); // Set initial state
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-      if (error.response) {
-        console.log(error.response.data.message);
-      }
+      setAdminDetails(response.adminDetails);
+      setInitialAdminDetails(response.adminDetails); // Set initial state
     }
   };
 
   // function to delete account
   const deleteAccount = async (e) => {
-    await checkToken();
     e.preventDefault();
     setLoading(true);
 
     try {
+        await checkToken();
       const response = await secondaryActions.DeleteAccount(
         { password },
         token
@@ -77,7 +63,6 @@ export default function PersonalDetails() {
         navigate("/");
       }
     } finally {
-      setPassword("");
       setDeleteAccountFlag(false);
       setLoading(false);
     }
@@ -86,7 +71,6 @@ export default function PersonalDetails() {
   // function to update account
   const updateAccount = useCallback(
     async (e) => {
-      await checkToken();
       e.preventDefault();
       setLoading(true);
 
@@ -101,6 +85,7 @@ export default function PersonalDetails() {
       };
 
       try {
+        await checkToken();
         const response = await secondaryActions.UpdateAccount(data, token);
         if (response.otp) {
           setOtpFlag(true);
@@ -115,11 +100,11 @@ export default function PersonalDetails() {
   );
 
   const confirmOTP = async (e) => {
-    await checkToken();
     e.preventDefault();
     setLoading(true);
 
     try {
+        await checkToken();
       const response = await secondaryActions.ConfirmOTP({ otp }, token);
       if (response.success) {
         setOtp("");
@@ -135,61 +120,30 @@ export default function PersonalDetails() {
 
   // function to changePassword
   const changePassword = async (e) => {
-    await checkToken();
     e.preventDefault();
     setLoading(true);
 
-    if (password !== confirmPassword) {
-      setLoading(false);
-      setPassword("");
-      setConfirmPassword("");
-      return alert(
-        "Error! The confirm password must be same as the new password!"
-      );
-    }
+    await secondaryActions.ChangePassword(
+      { currentPassword, newPassword, confirmPassword },
+      token
+    );
 
-    const URL = `${
-      import.meta.env.VITE_BACKEND_API
-    }/v1/admin/password/change-password`;
-
-    try {
-      const response = await axios.patch(
-        URL,
-        { password },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-
-      alert(response.data.message);
-      setPassword("");
-      setConfirmPassword("");
-      setLoading(false);
-      setEditPasswordFlag(false);
-    } catch (error) {
-      console.error(error);
-      if (error.response) {
-        alert(error.response.data.message);
-      }
-      setPassword("");
-      setConfirmPassword("");
-      setLoading(false);
-      setEditPasswordFlag(false);
-    }
+    // the rest of the code executes regardless of the outcome of ChangePassword function
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setEditPasswordFlag(false);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    fetchAdminDetails();
+  }, [token, refreshToken]);
 
   // Function to check if there are any changes
   const hasChanges = () => {
     return JSON.stringify(adminDetails) !== JSON.stringify(initialAdminDetails);
   };
-
-  useEffect(() => {
-    fetchAdminDetails();
-  }, []);
 
   return (
     <>
@@ -456,10 +410,19 @@ export default function PersonalDetails() {
                     <form onSubmit={changePassword}>
                       <input
                         type="password"
+                        id="currentpassword"
+                        placeholder="Enter the current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                        required
+                      />
+                      <input
+                        type="password"
                         id="password"
                         placeholder="Enter a new password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                         required
                       />
@@ -483,7 +446,7 @@ export default function PersonalDetails() {
                         <button
                           type="submit"
                           className="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-green-200"
-                          disabled={!password || !confirmPassword} // Disable the button if password is empty
+                          disabled={!newPassword || !confirmPassword} // Disable the button if password is empty
                         >
                           Update
                         </button>
