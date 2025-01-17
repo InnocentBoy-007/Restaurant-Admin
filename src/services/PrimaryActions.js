@@ -56,8 +56,7 @@ class PrimaryActions {
             const response = await axios.delete(URL, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
 
             const { message } = response.data;
-
-            return { message };
+            alert(message);
         } catch (error) {
             console.error(error);
             if (error.response) {

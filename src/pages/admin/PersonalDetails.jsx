@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import secondaryActions from "../../services/SecondaryActions";
 import { RefreshToken } from "../../components/RefreshToken";
@@ -27,6 +26,13 @@ export default function PersonalDetails() {
   const [editPasswordFlag, setEditPasswordFlag] = useState(false);
   const [otpFlag, setOtpFlag] = useState(false);
 
+  useEffect(() => {
+    if (!Cookies.get("adminToken")) {
+      navigate("/");
+      console.log("You need to login first!");
+    }
+  }, []);
+
   const checkToken = async () => {
     if (refreshToken && isTokenExpired(token)) {
       const newToken = await RefreshToken(refreshToken);
@@ -38,11 +44,13 @@ export default function PersonalDetails() {
   const fetchAdminDetails = async () => {
     setLoading(true);
     await checkToken();
-    const response = await fetchDetails.FetchAdminDetails(token);
-    if (response.success) {
-      setLoading(false);
-      setAdminDetails(response.adminDetails);
-      setInitialAdminDetails(response.adminDetails); // Set initial state
+    if (token) {
+      const response = await fetchDetails.FetchAdminDetails(token);
+      if (response.success) {
+        setLoading(false);
+        setAdminDetails(response.adminDetails);
+        setInitialAdminDetails(response.adminDetails); // Set initial state
+      }
     }
   };
 
@@ -52,15 +60,17 @@ export default function PersonalDetails() {
     setLoading(true);
 
     try {
-        await checkToken();
-      const response = await secondaryActions.DeleteAccount(
-        { password },
-        token
-      );
-      if (response.success) {
-        Cookies.remove("adminToken");
-        Cookies.remove("adminRefreshToken");
-        navigate("/");
+      await checkToken();
+      if (token) {
+        const response = await secondaryActions.DeleteAccount(
+          { password: currentPassword },
+          token
+        );
+        if (response.success) {
+          Cookies.remove("adminToken");
+          Cookies.remove("adminRefreshToken");
+          navigate("/");
+        }
       }
     } finally {
       setDeleteAccountFlag(false);
@@ -86,12 +96,14 @@ export default function PersonalDetails() {
 
       try {
         await checkToken();
-        const response = await secondaryActions.UpdateAccount(data, token);
-        if (response.otp) {
-          setOtpFlag(true);
+        if (token) {
+          const response = await secondaryActions.UpdateAccount(data, token);
+          if (response.success) {
+            setOtpFlag(true);
+          }
+          setEditAccountFlag(false);
+          setInitialAdminDetails(adminDetails); // Update initial state after saving
         }
-        setEditAccountFlag(false);
-        setInitialAdminDetails(adminDetails); // Update initial state after saving
       } finally {
         setLoading(false);
       }
@@ -104,12 +116,14 @@ export default function PersonalDetails() {
     setLoading(true);
 
     try {
-        await checkToken();
-      const response = await secondaryActions.ConfirmOTP({ otp }, token);
-      if (response.success) {
-        setOtp("");
-        setLoading(false);
-        setOtpFlag(false);
+      await checkToken();
+      if (token) {
+        const response = await secondaryActions.ConfirmOTP({ otp }, token);
+        if (response.success) {
+          setOtp("");
+          setLoading(false);
+          setOtpFlag(false);
+        }
       }
     } catch (error) {
       setOtp("");
@@ -123,17 +137,20 @@ export default function PersonalDetails() {
     e.preventDefault();
     setLoading(true);
 
-    await secondaryActions.ChangePassword(
-      { currentPassword, newPassword, confirmPassword },
-      token
-    );
+    await checkToken();
+    if (token) {
+      await secondaryActions.ChangePassword(
+        { currentPassword, newPassword, confirmPassword },
+        token
+      );
 
-    // the rest of the code executes regardless of the outcome of ChangePassword function
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setEditPasswordFlag(false);
-    setLoading(false);
+      // the rest of the code executes regardless of the outcome of ChangePassword function
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setEditPasswordFlag(false);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -375,8 +392,8 @@ export default function PersonalDetails() {
                         type="password"
                         id="password"
                         placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
                         className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                         required
                       />
@@ -391,7 +408,7 @@ export default function PersonalDetails() {
                         <button
                           type="submit"
                           className="bg-red-800 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:bg-red-300"
-                          disabled={!password} // Disable the button if password is empty
+                          disabled={!currentPassword} // Disable the button if password is empty
                         >
                           Delete
                         </button>

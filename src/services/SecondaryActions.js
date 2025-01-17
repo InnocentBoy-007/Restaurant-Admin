@@ -34,10 +34,6 @@ class SecondaryActions {
             const response = await axios.patch(URL, data, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
 
-            if (response.data.otp) {
-                return { otp: true }
-            }
-
             return { success: true };
         } catch (error) {
             console.error(error);

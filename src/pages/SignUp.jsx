@@ -5,48 +5,49 @@ import primaryActions from "../services/PrimaryActions";
 
 export default function SignUp() {
   const [laoding, setLoading] = useState(false);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [phoneNo, setPhoneNo] = useState("");
-  const [gender, setGender] = useState("");
-  const [age, setAge] = useState("");
+  const [userData, setUserData] = useState({
+    username: "",
+    email: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
+    phoneNo: "",
+    gender: "",
+    age: "",
+  });
+
+  const resetUserData = () => {
+    setUserData({
+      username: "",
+      email: "",
+      address: "",
+      password: "",
+      confirmPassword: "",
+      phoneNo: "",
+      gender: "",
+      age: "",
+    });
+  };
 
   const navigate = useNavigate();
 
   // if there is token available in cookies, the admin will be redirected to productpage
   // no need to signin again as long as there is a token inside cookies
-  const tokenAvailable = () => {
-    const token = Cookies.get("adminToken");
-    if (token) {
-      navigate("/admin/orders");
-      return;
-    }
-  };
-
   useEffect(() => {
-    tokenAvailable();
-  }, []);
+    if (Cookies.get("adminToken")) navigate("/admin/orders");
+  });
 
   const signUpHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const data = {
-      adminDetails: {
-        username,
-        email,
-        address,
-        password,
-        phoneNo,
-        gender,
-        age: parseInt(age),
-      },
-    };
+    if (userData.password !== userData.confirmPassword) {
+      resetUserData();
+      return alert("The confirm password must be same as the password!");
+    }
 
     try {
-      const response = await primaryActions.signUp(data);
+      const response = await primaryActions.signUp({ adminDetails: userData });
       if (response.success) {
         Cookies.set("adminToken", response.token);
         Cookies.set("adminRefreshToken", response.refreshToken);
@@ -54,7 +55,14 @@ export default function SignUp() {
         navigate("/admin/verify");
       }
     } catch (error) {
-      setLoading(false);
+      console.error(error);
+      if (response.error) {
+        error.response.data.message;
+      } else if (error.request) {
+        alert("Network error! Please try again later!");
+      } else {
+        console.log("An unexpected error occured while trying to sign up!");
+      }
     }
   };
 
@@ -75,8 +83,13 @@ export default function SignUp() {
                 <input
                   type="text"
                   id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={userData.username}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      username: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />
@@ -91,8 +104,13 @@ export default function SignUp() {
                 <input
                   type="email"
                   id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={userData.email}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      email: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />
@@ -107,8 +125,13 @@ export default function SignUp() {
                 <input
                   type="text"
                   id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  value={userData.address}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      address: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />
@@ -123,8 +146,34 @@ export default function SignUp() {
                 <input
                   type="password"
                   id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={userData.password}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      password: e.target.value,
+                    }))
+                  }
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  className="block text-sm font-medium text-gray-700"
+                  htmlFor="confirmpassword"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  value={userData.confirmPassword}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />
@@ -139,8 +188,13 @@ export default function SignUp() {
                 <input
                   type="text"
                   id="phoneNo"
-                  value={phoneNo}
-                  onChange={(e) => setPhoneNo(e.target.value)}
+                  value={userData.phoneNo}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      phoneNo: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />
@@ -154,8 +208,13 @@ export default function SignUp() {
                     <input
                       type="radio"
                       value="male"
-                      checked={gender === "male"}
-                      onChange={(e) => setGender(e.target.value)}
+                      checked={userData.gender === "male"}
+                      onChange={(e) =>
+                        setUserData((prevUserData) => ({
+                          ...prevUserData,
+                          gender: e.target.value,
+                        }))
+                      }
                       className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
                       required
                     />
@@ -165,8 +224,13 @@ export default function SignUp() {
                     <input
                       type="radio"
                       value="female"
-                      checked={gender === "female"}
-                      onChange={(e) => setGender(e.target.value)}
+                      checked={userData.gender === "female"}
+                      onChange={(e) =>
+                        setUserData((prevUserData) => ({
+                          ...prevUserData,
+                          gender: e.target.value,
+                        }))
+                      }
                       className="form-radio h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
                       required
                     />
@@ -185,8 +249,13 @@ export default function SignUp() {
                 <input
                   type="text"
                   id="age"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
+                  value={userData.age}
+                  onChange={(e) =>
+                    setUserData((prevUserData) => ({
+                      ...prevUserData,
+                      age: e.target.value,
+                    }))
+                  }
                   className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-500"
                   required
                 />

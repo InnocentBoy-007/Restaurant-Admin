@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import primaryActions from "../services/PrimaryActions";
 import forgotPassword from "../components/PasswordManagement";
-import { jwtDecode } from "jwt-decode";
 import { isTokenExpired } from "../components/IsTokenExpired";
 import { RefreshToken } from "../components/RefreshToken";
 
@@ -24,22 +23,16 @@ export default function SignIn() {
   const [otpVerifyFlag, setOtpVerifyFlag] = useState(false);
   const [newPasswordFlag, setNewPasswordFlag] = useState(false);
 
+  useEffect(() => {
+    if(Cookies.get("adminToken")) navigate("/admin/orders");
+  }, []);
+
   const checkToken = async () => {
-    try {
-      if (token && !isTokenExpired(token)) {
-        const decodedToken = jwtDecode(token);
-        setAdminId(decodedToken.adminId);
-        navigate("/admin/orders");
-      } else if (refreshToken && isTokenExpired(token)) {
-        const newToken = await RefreshToken(refreshToken, decodedToken.adminId);
-        setToken(newToken.token);
-        Cookies.set("adminToken", newToken.token);
-        navigate("/admin/orders");
-      }
-    } catch (error) {
-      Cookies.remove("adminToken");
-      Cookies.remove("adminRefreshToken");
-      navigate("/");
+    if (refreshToken && isTokenExpired(token)) {
+      const newToken = await RefreshToken(refreshToken);
+      setToken(newToken.token);
+      Cookies.set("adminToken", newToken.token);
+      navigate("/admin/orders");
     }
   };
 

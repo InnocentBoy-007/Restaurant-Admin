@@ -1,45 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 import { isTokenExpired } from "../components/IsTokenExpired";
 import { RefreshToken } from "../components/RefreshToken";
 
 // test passed
 export const OtpVerify = () => {
+  let [token, setToken] = useState(Cookies.get("adminToken"));
+  const refreshToken = Cookies.get("adminRefreshToken");
   const navigate = useNavigate();
   const [laoding, setLoading] = useState(false);
   const [OTP, setOTP] = useState("");
 
+  useEffect(() => {
+    if (!Cookies.get("adminToken")) {
+      navigate("/");
+      console.log("You need to login or sign up first!");
+    }
+  }, []);
+
   const confirmOTP = async (e) => {
     e.preventDefault();
     setLoading(true);
-    let token = Cookies.get("adminToken");
-    const refreshToken = Cookies.get("adminRefreshToken");
-    const decodedToken = jwtDecode(refreshToken);
-    const adminId = decodedToken.adminId;
 
-    if (!token || isTokenExpired(token)) {
-      token = await RefreshToken(refreshToken, adminId);
+    if (refreshToken && isTokenExpired(token)) {
+      const newToken = await RefreshToken(refreshToken);
+      setToken(newToken.token);
+      Cookies.set("adminToken", newToken.token);
     }
 
     const URL = `${import.meta.env.VITE_BACKEND_API}/account/signup/verifyOTP`;
-    const body = {
-      otp: OTP,
-    };
 
     try {
-      const response = await axios.post(URL, body, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-      alert(`${response.data.message}`);
-      setLoading(false);
-      navigate("/admin/orders");
+      if (token) {
+        const response = await axios.post(
+          URL,
+          { otp: OTP },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            withCredentials: true,
+          }
+        );
+        alert(response.data.message);
+        setLoading(false);
+        navigate("/admin/orders");
+      }
     } catch (error) {
       setLoading(false);
       console.log(error);
@@ -47,6 +56,8 @@ export const OtpVerify = () => {
       // if anything goes wrong delete the tokens
       Cookies.remove("adminToken");
       Cookies.remove("adminRefreshToken");
+      navigate("/admin/signup");
+      alert(`${error.response.data.message}. Please signup again!`);
     }
   };
   return (

@@ -24,6 +24,13 @@ export default function OrderPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutFlag, setLogoutFlag] = useState(false);
 
+  useEffect(() => {
+    if (!Cookies.get("adminToken")) {
+      navigate("/");
+      console.log("You need to login first or sign up first!");
+    }
+  }, []);
+
   const checkToken = async () => {
     if (refreshToken && isTokenExpired(token)) {
       const newToken = await RefreshToken(refreshToken);
@@ -35,13 +42,15 @@ export default function OrderPage() {
   // function to fetch only admin name
   const fetchAdminDetails = async () => {
     await checkToken();
-    const response = await fetchDetails.FetchAdminDetails(token);
-    if (response.success) {
-      setAdminName(response.adminDetails.username);
-    } else {
-      console.log(
-        "There is an error while trying to execute the fetch admin details function!"
-      );
+    if (token) {
+      const response = await fetchDetails.FetchAdminDetails(token);
+      if (response.success) {
+        setAdminName(response.adminDetails.username);
+      } else {
+        console.log(
+          "There is an error while trying to execute the fetch admin details function!"
+        );
+      }
     }
   };
 
@@ -50,17 +59,19 @@ export default function OrderPage() {
 
     try {
       await checkToken();
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_API}/v1/admin/orders/fetch_orders`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-      setLoading(false);
-      setOrderDetails(response.data.orders);
+      if (token) {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_API}/v1/admin/orders/fetch_orders`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            withCredentials: true,
+          }
+        );
+        setLoading(false);
+        setOrderDetails(response.data.orders);
+      }
 
       // console.log(response.data);
     } catch (error) {
@@ -79,10 +90,12 @@ export default function OrderPage() {
 
     try {
       await checkToken();
-      const response = await services.acceptOrder(orderId, token);
-      if (response.success) {
-        fetchOrderDetails();
-        setAcceptLoading(false);
+      if (token) {
+        const response = await services.acceptOrder(orderId, token);
+        if (response.success) {
+          fetchOrderDetails();
+          setAcceptLoading(false);
+        }
       }
     } catch (error) {
       setAcceptLoading(false);
@@ -96,10 +109,12 @@ export default function OrderPage() {
 
     try {
       await checkToken();
-      const response = await services.rejectOrder(orderId, token);
-      if (response.success) {
-        fetchOrderDetails();
-        setRejectLoading(false);
+      if (token) {
+        const response = await services.rejectOrder(orderId, token);
+        if (response.success) {
+          fetchOrderDetails();
+          setRejectLoading(false);
+        }
       }
     } catch (error) {
       setRejectLoading(false);
@@ -111,11 +126,11 @@ export default function OrderPage() {
     setLogoutLoading(true);
     try {
       await checkToken();
-      const response = await primaryActions.logout(token);
-      Cookies.remove("adminToken");
-      Cookies.remove("adminRefreshToken");
-      navigate("/");
-      alert(response.message);
+      if (token) {
+        await primaryActions.logout(token);
+        Cookies.remove("adminToken");
+        Cookies.remove("adminRefreshToken");
+      }
     } finally {
       setLogoutLoading(false);
       navigate("/");

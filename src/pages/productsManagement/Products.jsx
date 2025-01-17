@@ -28,6 +28,13 @@ export default function Products() {
   const [productPrice, setProductPrice] = useState("");
   const [productQuantity, setProductQuantity] = useState("");
 
+  useEffect(() => {
+    if (!Cookies.get("adminToken")) {
+      navigate("/");
+      console.log("You need to login or sign up first!");
+    }
+  }, []);
+
   const clearUpInputFields = () => {
     setProductName("");
     setProductPrice("");
@@ -47,12 +54,14 @@ export default function Products() {
   const fetchProducts = async () => {
     setFetchProductLoading(true);
     await checkToken();
-    const response = await fetchDetails.FetchProductDetails();
-    if (response.success) {
-      setProductDetails(response.productDetails);
-      setFetchProductLoading(false);
-    } else {
-      setNoProductsMessage(response.errorMessage);
+    if (token) {
+      const response = await fetchDetails.FetchProductDetails();
+      if (response.success) {
+        setProductDetails(response.productDetails);
+        setFetchProductLoading(false);
+      } else {
+        setNoProductsMessage(response.errorMessage);
+      }
     }
   };
 
@@ -69,12 +78,14 @@ export default function Products() {
 
     try {
       await checkToken();
-      const response = await productController.addProduct(body, token);
-      if (response.success) {
-        clearUpInputFields();
-        await fetchProducts(); // update the frontend after successfully adding a new product
-        setAddNewProductLoading(false);
-        setAddNewProductFlag(false);
+      if (token) {
+        const response = await productController.addProduct(body, token);
+        if (response.success) {
+          clearUpInputFields();
+          await fetchProducts(); // update the frontend after successfully adding a new product
+          setAddNewProductLoading(false);
+          setAddNewProductFlag(false);
+        }
       }
     } catch (error) {
       clearUpInputFields();
@@ -88,12 +99,17 @@ export default function Products() {
 
     try {
       await checkToken();
-      const response = await productController.deleteProduct(productId, token);
-      if (response.success) {
-        setProductId("");
-        await fetchProducts();
-        setDeleteProductLoading(false);
-        setProductDeleteFlag(false);
+      if (token) {
+        const response = await productController.deleteProduct(
+          productId,
+          token
+        );
+        if (response.success) {
+          setProductId("");
+          await fetchProducts();
+          setDeleteProductLoading(false);
+          setProductDeleteFlag(false);
+        }
       }
     } catch (error) {
       setProductId("");
@@ -114,14 +130,16 @@ export default function Products() {
 
     try {
       await checkToken();
-      const response = await productController.updateProduct(
-        productId,
-        data,
-        token
-      );
-      if (response.success) {
-        fetchProducts();
-        setProductEditFlag(false);
+      if (token) {
+        const response = await productController.updateProduct(
+          productId,
+          data,
+          token
+        );
+        if (response.success) {
+          fetchProducts();
+          setProductEditFlag(false);
+        }
       }
     } finally {
       clearUpInputFields();
