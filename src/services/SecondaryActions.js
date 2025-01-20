@@ -34,7 +34,11 @@ class SecondaryActions {
             const response = await axios.patch(URL, data, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
 
-            return { success: true };
+            if (response.data.otp) {
+                return { otp: true }
+            } else {
+                return { otp: false }
+            }
         } catch (error) {
             console.error(error);
             if (error.response) {
@@ -55,10 +59,9 @@ class SecondaryActions {
 
         try {
             const response = await axios.post(URL, data, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
+            const { message } = response.data;
 
-            alert(response.data.message);
-
-            return { success: true };
+            return { message };
         } catch (error) {
             console.error(error);
             if (error.response) {

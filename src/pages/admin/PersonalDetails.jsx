@@ -98,7 +98,7 @@ export default function PersonalDetails() {
         await checkToken();
         if (token) {
           const response = await secondaryActions.UpdateAccount(data, token);
-          if (response.success) {
+          if (response.otp) {
             setOtpFlag(true);
           }
           setEditAccountFlag(false);
@@ -119,13 +119,9 @@ export default function PersonalDetails() {
       await checkToken();
       if (token) {
         const response = await secondaryActions.ConfirmOTP({ otp }, token);
-        if (response.success) {
-          setOtp("");
-          setLoading(false);
-          setOtpFlag(false);
-        }
+        alert(response.message);
       }
-    } catch (error) {
+    } finally {
       setOtp("");
       setLoading(false);
       setOtpFlag(false);
