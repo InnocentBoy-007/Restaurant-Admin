@@ -32,8 +32,10 @@ export default function Products() {
     if (!Cookies.get("adminToken")) {
       navigate("/");
       console.log("You need to login or sign up first!");
+    } else {
+      fetchProducts();
     }
-  }, []);
+  }, [token, refreshToken]);
 
   const clearUpInputFields = () => {
     setProductName("");
@@ -53,14 +55,15 @@ export default function Products() {
 
   const fetchProducts = async () => {
     setFetchProductLoading(true);
-    await checkToken();
     if (token) {
       const response = await fetchDetails.FetchProductDetails();
       if (response.success) {
+        setNoProductsMessage("");
         setProductDetails(response.productDetails);
         setFetchProductLoading(false);
       } else {
         setNoProductsMessage(response.errorMessage);
+        setFetchProductLoading(false);
       }
     }
   };
@@ -76,20 +79,13 @@ export default function Products() {
       },
     };
 
-    try {
-      await checkToken();
-      if (token) {
-        const response = await productController.addProduct(body, token);
-        if (response.success) {
-          clearUpInputFields();
-          await fetchProducts(); // update the frontend after successfully adding a new product
-          setAddNewProductLoading(false);
-          setAddNewProductFlag(false);
-        }
-      }
-    } catch (error) {
+    await checkToken();
+    if (token) {
+      await productController.addProduct(body, token);
+      await fetchProducts(); // update the frontend after successfully adding a new product
       clearUpInputFields();
       setAddNewProductLoading(false);
+      setAddNewProductFlag(false);
     }
   };
 
@@ -155,10 +151,6 @@ export default function Products() {
       return addNewproducts(e);
     }
   };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [token, refreshToken]);
 
   return (
     <>
@@ -275,9 +267,11 @@ export default function Products() {
               </>
             ) : (
               <>
-                {productDetails.length === 0 ? (
+                {noProductsMessage ? (
                   <>
-                    <h1>{noProductsMessage}</h1>
+                    <div className="flex justify-center">
+                      <h1>{noProductsMessage}</h1>
+                    </div>
                   </>
                 ) : (
                   <>

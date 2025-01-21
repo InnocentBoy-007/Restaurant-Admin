@@ -6,8 +6,6 @@ class ProductController {
         try {
             const response = await axios.post(URL, body, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, withCredentials: true });
             alert(response.data.message);
-
-            return { success: true };
         } catch (error) {
             console.error(error);
             if (error.response) {
